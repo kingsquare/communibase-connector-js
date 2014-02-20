@@ -1,0 +1,25 @@
+{
+	"name": "communibaseConnector",
+	"description": "communibaseConnector --- a Node.js connector for the Communibase service",
+	"version": "0.1.0",
+
+	"dependencies": {
+		"when": "~2.8.0",
+		"restler": "3.1.0",
+		"underscore": "~1.5.2",
+		"async": "~0.2.10"
+	},
+	"devDependencies": {
+		"mocha": "~1.17.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://bitbucket.org/kingsquare/communibaseconnector.git"
+	},
+	"engines": {
+		"node": "~0.10.20"
+	},
+	"scripts": {
+		"test": "mocha test"
+	}
+}

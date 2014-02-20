@@ -14,7 +14,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://bitbucket.org/kingsquare/communibaseconnector.git"
+		"url": "https://github.com/kingsquare/communibaseConnector.git"
 	},
 	"engines": {
 		"node": "~0.10.20"

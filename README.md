@@ -1,7 +1,4 @@
 [![Build Status](https://travis-ci.org/kingsquare/communibase-connector-js.png)](https://travis-ci.org/kingsquare/communibase-connector-js)
-[![Scrutinizer Quality Score](https://scrutinizer-ci.com/g/kingsquare/communibase-connector-js/badges/quality-score.png?s=94ea144a5b63afdb4ff9b99991f5ca830ba59d37)](https://scrutinizer-ci.com/g/kingsquare/communibase-connector-php/)
-[![Latest Stable Version](https://poser.pugx.org/kingsquare/communibase-connector-js/v/stable.png)](https://www.npmjs.org/package/communibase-connector-js)
-[![License](https://poser.pugx.org/kingsquare/communibase-connector-js/license.png)](https://www.npmjs.org/package/communibase-connector-js)
 
 A general-purpose Communibase client for node.js projects. It is primarily a Singleton connector doing REST-calls on the Communibase API using a queuing system. It returns [A+ promises](https://github.com/promises-aplus/promises-spec) for Communibase responses. Behaviour is reflected by a PHP-version that can be found at [Github](https://github.com/kingsquare/communibase-connector-js).
 

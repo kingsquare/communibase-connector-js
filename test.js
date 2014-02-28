@@ -11,6 +11,7 @@ if (process.env.COMMUNIBASE_KEY) {
 var cbc = require('./index.js'), when = require('when'), assert = require('assert'), ids, newHenk;
 
 describe('Connector', function () {
+	this.timeout(10000);
 	describe('key handling', function () {
 		it('should throw errors when no key is configured', function (done) {
 			cbc.getAll('EntityType').then(function () {

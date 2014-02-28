@@ -1,12 +1,12 @@
 {
-	"name": "communibaseConnector",
-	"description": "communibaseConnector --- a Node.js connector for the Communibase service",
+	"name": "communibase-connector-js",
+	"description": "communibase-connector-js --- a Node.js connector for the Communibase service",
 	"version": "0.1.1",
 
 	"dependencies": {
 		"when": "~2.8.0",
-		"restler": "3.1.0",
-		"underscore": "~1.5.2",
+		"restler": "~3.2.0",
+		"underscore": "~1.6.0",
 		"async": "~0.2.10"
 	},
 	"devDependencies": {
@@ -14,10 +14,10 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/kingsquare/communibaseConnector.git"
+		"url": "https://github.com/kingsquare/communibase-connector-js.git"
 	},
 	"engines": {
-		"node": "~0.10.20"
+		"node": "~0.10.26"
 	},
 	"scripts": {
 		"test": "mocha test"

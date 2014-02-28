@@ -50,7 +50,7 @@ Connector = function (key) {
 
 		if (!key) {
 			fail(new Error('Missing key for Communibase Connector: please set COMMUNIBASE_KEY environment' +
-					' variable, or spawn a new instance using require(\'communibaseConnector\').clone(\'<' +
+					' variable, or spawn a new instance using require(\'communibase-connector-js\').clone(\'<' +
 					'your api key>\')'));
 			return;
 		}

@@ -1,12 +1,19 @@
 A general-purpose Communibase client for node.js projects. It is primarily a Singleton connector doing REST-calls on the Communibase API using a queing system. It returns [A+ promises](https://github.com/promises-aplus/promises-spec) for Communibase responses.
 
+Installation
+============
+
+```
+npm install --save communibase-connector-js
+```
+
 Usage
 =====
 
 Make sure environment variable exists with your API-key called COMMUNIBASE_KEY
 
 ```
-cbc = require('communibaseConnector');
+cbc = require('communibase-connector-js');
 
 cbc.search('Person', { firstName: 'henk' }).then(function (henkies) {
 	//do something with henkies
@@ -19,7 +26,7 @@ Advanced usage
 
 When you need to connect using multiple Communibase API Keys for some reason, you need to 'clone' the connector per key.
 ```
-cbc = require('communibaseConnector').clone(<your api key here>);
+cbc = require('communibase-connector-js').clone(<your api key here>);
 ```
 
 The following properties of a communibase connector may be usefull:
@@ -69,6 +76,8 @@ cbc.createReadStream(fileId) : Stream;
 ```
 
 Work with document history:
+
+```
 
 cbc.getHistory(objectType, objectId) : VersionInformation[];
 

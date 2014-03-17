@@ -8,7 +8,9 @@ if (process.env.COMMUNIBASE_KEY) {
 	delete process.env.COMMUNIBASE_KEY;
 }
 
-var cbc = require('./index.js'), when = require('when'), assert = require('assert'), ids, newHenk;
+var cbc = require('./index.js'), when = require('when'), assert = require('assert'), ids, newHenk, _;
+
+_ = require('underscore');
 
 describe('Connector', function () {
 	this.timeout(10000);
@@ -48,6 +50,7 @@ describe('Connector', function () {
 				done(new Error('Should not store invalid document'));
 			}, function (err) {
 				assert.equal(err instanceof Error, true);
+				assert.equal(_.size(err.errors) > 0, true);
 				done();
 			});
 		});

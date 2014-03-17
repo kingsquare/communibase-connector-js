@@ -3,7 +3,7 @@ var when, restler, _, async, http, https, stream, Connector;
 
 when = require('when');
 restler = require('restler');
-_ = require('underscore');
+_ = require('lodash');
 async = require('async');
 http = require('http');
 https = require('https');
@@ -13,7 +13,7 @@ function CommunibaseError(data) {
 	this.name = "CommunibaseError";
 	this.code = (data.code || 500);
 	this.message = (data.message || "");
-	this.errors = (data.erros || {});
+	this.errors = (data.errors || {});
 }
 
 CommunibaseError.prototype = Error.prototype;

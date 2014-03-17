@@ -9,6 +9,14 @@ http = require('http');
 https = require('https');
 stream = require('stream');
 
+function CommunibaseError(data) {
+	this.name = "CommunibaseError";
+	this.code = (data.code || 500);
+	this.message = (data.message || "");
+	this.errors = (data.erros || {});
+}
+
+CommunibaseError.prototype = Error.prototype;
 /**
  * Constructor for connector.
  *
@@ -43,8 +51,11 @@ Connector = function (key) {
 			callback();
 		};
 
-		fail = function (errorData) {
-			task.deferred.reject(errorData);
+		fail = function (error) {
+			if (!(error instanceof Error)) {
+				error =  new CommunibaseError(error);
+			}
+			task.deferred.reject(error);
 			callback();
 		};
 
@@ -438,4 +449,5 @@ Connector = function (key) {
 	};
 };
 
+Connector.prototype.Error = CommunibaseError;
 module.exports = new Connector(process.env.COMMUNIBASE_KEY);

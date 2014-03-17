@@ -31,6 +31,28 @@ describe('Connector', function () {
 		});
 	});
 
+	describe('promise handling', function () {
+		it('should reject the promise with a CommunibaseError when validation fails', function (done) {
+			cbc.update('Person', {
+				firstName: 'Henk',
+				lastName: 'De adressenman',
+				registeredDate: new Date(),
+				addresses: [{
+					street: '', //missing street here!
+					streetNumber: '123',
+					zipcode: '1234ab',
+					city: 'abc-city',
+					countryCode: 'NL'
+				}]
+			}).then(function (result) { //result
+				done(new Error('Should not store invalid document'));
+			}, function (err) {
+				assert.equal(err instanceof Error, true);
+				done();
+			});
+		});
+	});
+
 	describe('getAll', function () {
 		it('should get all EntityTypes', function (done) {
 			cbc.getAll('EntityType').then(function (entityTypes) {

@@ -83,11 +83,12 @@ E.g.
 Error handling
 --
 
-The ```update```-Promise may be rejected if an entity is not considered valid. The error is in the following format
+The ```update```-Promise may be rejected if an entity is not considered valid. The Error has one or more of the following properties:
 
 ```
 {
-	"success": true|false
+	"message": <a simplified error-string>
+	"code": <http response code of API>
 	"errors": {
 		[
 			"field": "<string>",

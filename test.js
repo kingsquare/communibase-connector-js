@@ -10,7 +10,7 @@ if (process.env.COMMUNIBASE_KEY) {
 
 var cbc = require('./index.js'), when = require('when'), assert = require('assert'), ids, newHenk, _;
 
-_ = require('underscore');
+_ = require('lodash');
 
 describe('Connector', function () {
 	this.timeout(10000);

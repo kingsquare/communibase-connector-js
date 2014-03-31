@@ -85,9 +85,9 @@ Connector = function (key) {
 		this.queue.push({
 			deferred: deferred,
 			method: 'get',
-			url: serviceUrl + objectType + '.json/' + (versionId
-					? 'history/' + objectId + '/' + versionId
-					: 'crud/' + objectId),
+			url: serviceUrl + objectType + '.json/' + (versionId ?
+				'history/' + objectId + '/' + versionId :
+				'crud/' + objectId),
 			options: {
 				query: params
 			}
@@ -313,9 +313,7 @@ Connector = function (key) {
 		this.queue.push({
 			deferred: deferred,
 			method: operation,
-			url: serviceUrl + objectType + '.json/crud' + ((operation === 'put')
-					? '/' + object._id
-					: ''),
+			url: serviceUrl + objectType + '.json/crud' + ((operation === 'put') ? '/' + object._id  : ''),
 			options: {
 				headers: {
 					'content-type': 'application/json'
@@ -480,7 +478,7 @@ Connector = function (key) {
 			}
 		});
 		return deferred.promise;
-	}
+	};
 };
 
 Connector.prototype.Error = CommunibaseError;

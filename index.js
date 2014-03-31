@@ -447,6 +447,40 @@ Connector = function (key) {
 			return when.reject(new Error('The referred object within it\'s parent could not be found'));
 		});
 	};
+
+	/**
+	 *
+	 * @param {string} objectType - E.g. Event
+	 * @param {array} aggregationPipeline - E.g. A MongoDB-specific Aggregation Pipeline
+	 * @see http://docs.mongodb.org/manual/core/aggregation-pipeline/
+	 *
+	 * E.g. [
+	 * { "$match": { "_id": {"$ObjectId": "52f8fb85fae15e6d0806e7c7"} } },
+	 * { "$unwind": "$participants" },
+	 * { "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
+	 * ]
+	 *
+	 */
+	this.aggregate = function (objectType, aggregationPipeline) {
+		var deferred;
+		if (!_.isArray(aggregationPipeline) || aggregationPipeline.length === 0)  {
+			return when.reject(new Error('Please provide a valid Aggregation Pipeline.'));
+		}
+
+		deferred = when.defer();
+		this.queue.push({
+			deferred: deferred,
+			method: 'post',
+			url: serviceUrl + objectType + '.json/aggregate',
+			options: {
+				headers: {
+					'content-type': 'application/json'
+				},
+				data: JSON.stringify(aggregationPipeline)
+			}
+		});
+		return deferred.promise;
+	}
 };
 
 Connector.prototype.Error = CommunibaseError;

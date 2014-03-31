@@ -221,4 +221,21 @@ describe('Connector', function () {
 			});
 		});
 	});
+
+	describe('aggregation', function () {
+		it('works', function (done) {
+			cbc.aggregate('Event', [
+				{ "$match": { "_id": {"$ObjectId": "52f8fb85fae15e6d0806e7c7"} } },
+				{ "$unwind": "$participants" },
+				{ "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
+			]).then(function (participantCounts) {
+				if (participantCounts && participantCounts.length) {
+					assert.equal(participantCounts[0].participantCount > 0, true);
+				}
+				done();
+			}, function (err) {
+				done(err);
+			});
+		});
+	});
 });

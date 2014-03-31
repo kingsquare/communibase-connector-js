@@ -2,32 +2,6 @@
 	//support
 	"node": true,
 
-	// vanilla settings
-	"bitwise": true,
-	"camelcase": true,
-	"curly": true,
-	"eqeqeq": true,
-	"forin": true,
-	"immed": true,
-	"latedef": true,
-	"newcap": true,
-	"noarg": true,
-	"noempty": true,
-	"nonew": true,
-	"plusplus": true,
-	"regexp": true,
-	"undef": true,
-	"unused": true,
-	"trailing": true,
-	"strict": true,
-
-	// Relaxing options
-	"laxbreak": true,
-
-	// Legacy options
-	"onevar": true,
-	"white": true,
-
 	"indent": 4,
 	"maxlen": 120
 }

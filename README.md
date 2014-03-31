@@ -119,3 +119,20 @@ cbc.getHistory(entityType, id) : VersionInformation[];
 cbc.getById(entityType, id, params, versionId) : Promise for Entity;
 
 ```
+
+Aggregate document data via Mongodb pipeline. For more information, see
+[http://docs.mongodb.org/manual/core/aggregation-pipeline/](http://docs.mongodb.org/manual/core/aggregation-pipeline/)
+
+```
+
+cbc.aggregate(entityType, aggregationPipeline);
+
+//Example:
+var participantCounters = cbc.aggregate('Event', [
+	{ "$match": { "_id": {"$ObjectId": "52f8fb85fae15e6d0806e7c7"} } },
+	{ "$unwind": "$participants" },
+	{ "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
+]);
+
+
+```

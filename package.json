@@ -1,7 +1,7 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "dependencies": {
     "when": "~2.8.0",
     "restler": "~3.2.0",

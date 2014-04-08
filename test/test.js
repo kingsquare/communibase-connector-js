@@ -238,4 +238,38 @@ describe('Connector', function () {
 			});
 		});
 	});
+
+	describe('getByRef', function () {
+		it('works with a correct ref', function (done) {
+			cbc.getByRef({
+				rootDocumentId: '524aca8947bd91000600000c',
+				rootDocumentEntityType: 'Person',
+				path: [{
+					field: 'addresses',
+					objectId: '53440792463cda7161000003'
+				}]
+			}).then(function (address) {
+				assert.equal(address.city, 'BEVERWIJK');
+				done();
+			}, function (err) {
+				done(err);
+			});
+		});
+
+		it('throws an error with an incorrect ref', function (done) {
+			cbc.getByRef({
+				rootDocumentId: '524aca8947bd91000600000c',
+				rootDocumentEntityType: 'Person',
+				path: [{
+					field: 'addresses',
+					objectId: '53440792463cda7161000001'
+				}]
+			}).then(function (address) {
+				console.log(address);
+				done(new Error('Should not find something'));
+			}, function (err) {
+				done();
+			});
+		});
+	});
 });

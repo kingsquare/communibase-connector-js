@@ -404,41 +404,58 @@ Connector = function (key) {
 	};
 
 	/**
-	 * Get a single object by a ref-string
+	 * Get a single object by a DocumentReference-object. A DocumentReference object looks like
+	 * {
+	 *	rootDocumentId: '524aca8947bd91000600000c',
+	 *	rootDocumentEntityType: 'Person',
+	 *	path: [
+	 *		{
+	 *			field: 'addresses',
+	 *			objectId: '53440792463cda7161000003'
+	 *		}, ...
+	 *	]
+	 * }
 	 *
-	 * @param {string} ref - E.g.
+	 * @param {object} ref - DocumentReference style, see above
 	 * @param {object} parentDocument
 	 * @return {Promise} for referred object
 	 */
 	this.getByRef = function (ref, parentDocument) {
-		var refParts, entityParts, parentDocumentPromise;
+		var rootDocumentEntityTypeParts, entityParts, parentDocumentPromise;
 
-		if (!ref) {
-			return when.reject(new Error('An empty ref cannot be resolved'));
+		if (!(ref && ref.rootDocumentEntityType && ref.rootDocumentId)) {
+			return when.reject(new Error('Please provide a documentReference object with a type and id'));
 		}
 
-		refParts =  ref.split('.');
-		if (refParts[0] !== 'parent') {
-			entityParts = refParts[0].split('|');
-			parentDocumentPromise = this.getById(entityParts[0], entityParts[1]);
+		rootDocumentEntityTypeParts =  ref.rootDocumentEntityType.split('.');
+		if (rootDocumentEntityTypeParts[0] !== 'parent') {
+			parentDocumentPromise = this.getById(ref.rootDocumentEntityType, ref.rootDocumentId);
 		} else {
 			parentDocumentPromise = when(parentDocument);
 		}
 
-		if (!refParts[1]) {
+		if (!(ref.path && ref.path.length && ref.path.length > 0)) {
 			return parentDocumentPromise;
 		}
 
-		return parentDocumentPromise.then(function (parentDocument) {
-			var propertyParts = refParts[1].split('|'), result = null;
-			_.some(parentDocument[propertyParts[0]], function (subDocument) {
-				if (subDocument._id === propertyParts[1]) {
-					result = subDocument;
-					return true;
+		return parentDocumentPromise.then(function (result) {
+			_.some(ref.path, function (pathNibble) {
+				if (result[pathNibble.field]) {
+					if (!_.some(result[pathNibble.field], function (subDocument) {
+						if (subDocument._id === pathNibble.objectId) {
+							result = subDocument;
+							return true;
+						}
+						return false;
+					})) {
+						result = null;
+						return true;
+					}
+					return false;
 				}
-				return false;
+				result = null;
+				return true;
 			});
-
 			if (result) {
 				return result;
 			}

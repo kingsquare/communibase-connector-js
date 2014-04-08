@@ -136,3 +136,23 @@ var participantCounters = cbc.aggregate('Event', [
 
 
 ```
+
+Work with "DocumentReferences". A DocumentReference is a unified specification to point to some other (sub-)doucment
+within the administration. A DocumentReference looks like:
+
+
+```
+{
+	rootDocumentId: '524aca8947bd91000600000c',
+	rootDocumentEntityType: 'Person',
+	path: [
+		{
+			field: 'addresses',
+			objectId: '53440792463cda7161000003'
+		}, ...
+	]
+}
+
+```
+
+The contents will be parsed and the requested data will be retrieved.

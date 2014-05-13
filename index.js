@@ -1,5 +1,5 @@
 'use strict';
-var when, restler, _, async, http, https, stream, Connector;
+var when, restler, _, async, http, https, stream, Connector, io;
 
 when = require('when');
 restler = require('restler');
@@ -8,6 +8,7 @@ async = require('async');
 http = require('http');
 https = require('https');
 stream = require('stream');
+io = require('socket.io-client');
 
 function CommunibaseError(data) {
 	this.name = "CommunibaseError";
@@ -24,12 +25,13 @@ CommunibaseError.prototype = Error.prototype;
  * @constructor
  */
 Connector = function (key) {
-	var getByIdQueue, getByIdPrimed, serviceUrl, serviceUrlIsHttps;
+	var getByIdQueue, getByIdPrimed, serviceUrl, serviceUrlIsHttps, cache;
 
 	getByIdQueue = {};
 	getByIdPrimed = false;
 	serviceUrl = 'https://api.communibase.nl/0.1/';
 	serviceUrlIsHttps = true;
+	cache = null;
 
 	this.setServiceUrl = function (newServiceUrl) {
 		serviceUrl = newServiceUrl;
@@ -77,50 +79,47 @@ Connector = function (key) {
 	}, 8);
 
 	/**
-	 * Bare boned retrieval by objectId
+	 *
+	 * Bare boned search
 	 * @returns {Promise}
-	 */
-	this._getById = function (objectType, objectId, params, versionId) {
+	 *
+	 ***/
+	this._search = function (objectType, selector, params) {
 		var deferred = when.defer();
 		this.queue.push({
 			deferred: deferred,
-			method: 'get',
-			url: serviceUrl + objectType + '.json/' + (versionId ?
-				'history/' + objectId + '/' + versionId :
-				'crud/' + objectId),
+			method: 'post',
+			url: serviceUrl + objectType + '.json/search',
 			options: {
+				headers: {
+					'content-type': 'application/json'
+				},
+				data: JSON.stringify(selector),
 				query: params
 			}
 		});
 		return deferred.promise;
-	};
+	}
+
 
 	/**
 	 * Bare boned retrieval by objectIds
 	 * @returns {Promise}
 	 */
 	this._getByIds = function (objectType, objectIds, params) {
-		return this.search(objectType, {
+		return this._search(objectType, {
 			_id: { $in: objectIds }
 		}, params);
 	};
 
-	this.getByIdTask = function () {
+	/**
+	 * Default object retrieval: should provide cachable objects
+	 */
+	this.spoolQueue = function () {
 		var self = this;
 		_.each(getByIdQueue, function (deferredsById, objectType) {
 			var objectIds = _.keys(deferredsById);
 			getByIdQueue[objectType] = {};
-
-			if (objectIds.length === 1) {
-				self._getById(objectType, objectIds[0]).then(
-						function (object) {
-							deferredsById[object._id].resolve(object);
-						},
-						function (error) {
-							deferredsById[objectIds[0]].reject(error);
-						}
-				);
-			}
 
 			self._getByIds(objectType, objectIds).then(
 				function (objects) {
@@ -158,27 +157,53 @@ Connector = function (key) {
 			return when.reject(new Error('Invalid objectId'));
 		}
 
-		if (!versionId && (!params || !params.fields)) {
-			//since we are not requesting a specific version or fields, we may combine the request..?
-			if (getByIdQueue[objectType] === undefined) {
-				getByIdQueue[objectType] = {};
-			}
-			if (getByIdQueue[objectType][objectId]) {
-				//requested twice?
-				return getByIdQueue[objectType][objectId].promise;
-			}
+		// not combinable...
+		if (versionId || (params && params.fields)) {
+			var deferred = when.defer();
+			this.queue.push({
+				deferred: deferred,
+				method: 'get',
+				url: serviceUrl + objectType + '.json/' + (versionId ?
+						'history/' + objectId + '/' + versionId :
+						'crud/' + objectId),
+				options: {
+					query: params
+				}
+			});
+			return deferred.promise;
+		}
 
-			getByIdQueue[objectType][objectId] = when.defer();
-			if (!getByIdPrimed) {
-				process.nextTick(function () {
-					self.getByIdTask();
-				});
-				getByIdPrimed = true;
-			}
+		//cached?
+		if (cache && cache.isAvailable(objectType, objectId)) {
+			return cache.objectCache[objectType][objectId];
+		}
+
+		//since we are not requesting a specific version or fields, we may combine the request..?
+		if (getByIdQueue[objectType] === undefined) {
+			getByIdQueue[objectType] = {};
+		}
+
+		if (getByIdQueue[objectType][objectId]) {
+			//requested twice?
 			return getByIdQueue[objectType][objectId].promise;
 		}
 
-		return this._getById(objectType, objectId, params, versionId);
+		getByIdQueue[objectType][objectId] = when.defer();
+
+		if (cache) {
+			if (cache.objectCache[objectType] === undefined) {
+				cache.objectCache[objectType] = {};
+			}
+			cache.objectCache[objectType][objectId] = getByIdQueue[objectType][objectId].promise;
+		}
+
+		if (!getByIdPrimed) {
+			process.nextTick(function () {
+				self.spoolQueue();
+			});
+			getByIdPrimed = true;
+		}
+		return getByIdQueue[objectType][objectId].promise;
 	};
 
 	/**
@@ -196,29 +221,30 @@ Connector = function (key) {
 			return when([]);
 		}
 
-		if (!params || !params.fields) {
-			promises = [];
-			self = this;
-			_.each(objectIds, function (objectId) {
-				promises.push(self.getById(objectType, objectId, params));
-			});
-			return when.settle(promises).then(function (descriptors) {
-				var result = [], error = null;
-				_.each(descriptors, function (d) {
-					if (d.state === 'rejected') {
-						error = d.reason;
-						return;
-					}
-					result.push(d.value);
-				});
-				if (result.length) {
-					return result;
-				}
-				return when.reject(error);
-			});
+		// not combinable...
+		if (params && params.fields) {
+			return this._getByIds(objectType, objectIds, params);
 		}
 
-		return this._getByIds(objectType, objectIds, params);
+		promises = [];
+		self = this;
+		_.each(objectIds, function (objectId) {
+			promises.push(self.getById(objectType, objectId, params));
+		});
+		return when.settle(promises).then(function (descriptors) {
+			var result = [], error = null;
+			_.each(descriptors, function (d) {
+				if (d.state === 'rejected') {
+					error = d.reason;
+					return;
+				}
+				result.push(d.value);
+			});
+			if (result.length) {
+				return result;
+			}
+			return when.reject(error);
+		});
 	};
 
 	/**
@@ -229,7 +255,13 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getAll = function (objectType, params) {
-		var deferred = when.defer();
+		var deferred, self;
+
+		if (cache && !(params && params.fields)) {
+			return this.search(objectType, {}, params);
+		}
+
+		deferred = when.defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'get',
@@ -238,7 +270,6 @@ Connector = function (key) {
 				query: params
 			}
 		});
-
 		return deferred.promise;
 	};
 
@@ -278,26 +309,18 @@ Connector = function (key) {
 	 * @returns promise for objects
 	 */
 	this.search = function (objectType, selector, params) {
-		var deferred;
+		if (cache && !(params && params.fields)) {
+			var self = this;
+			return this.getIds(objectType, selector, params).then(function (ids) {
+				return self.getByIds(objectType, ids);
+			});
+		}
 
 		if (_.isEmpty(selector)) {
 			return this.getAll(objectType, params);
 		}
 
-		deferred = when.defer();
-		this.queue.push({
-			deferred: deferred,
-			method: 'post',
-			url: serviceUrl + objectType + '.json/search',
-			options: {
-				headers: {
-					'content-type': 'application/json'
-				},
-				data: JSON.stringify(selector),
-				query: params
-			}
-		});
-		return deferred.promise;
+		return this._search(objectType, selector, params);
 	};
 
 	/**
@@ -309,6 +332,11 @@ Connector = function (key) {
 	 */
 	this.update = function (objectType, object) {
 		var deferred = when.defer(), operation = ((object._id && (object._id.length > 0)) ? 'put' : 'post');
+
+		if (object['_id'] && cache && cache.objectCache && cache.objectCache[objectType] &&
+				cache.objectCache[objectType][object['_id']])  {
+			cache.objectCache[objectType][object['_id']] = null;
+		}
 
 		this.queue.push({
 			deferred: deferred,
@@ -334,6 +362,10 @@ Connector = function (key) {
 	 */
 	this.destroy = function (objectType, objectId) {
 		var deferred = when.defer();
+
+		if (cache && cache.objectCache && cache.objectCache[objectType] && cache.objectCache[objectType][objectId])  {
+			cache.objectCache[objectType][objectId] = null;
+		}
 
 		this.queue.push({
 			deferred: deferred,
@@ -496,6 +528,42 @@ Connector = function (key) {
 		});
 		return deferred.promise;
 	};
+
+	this.enableCache = function (communibaseAdministrationId, socketServiceUrl) {
+		cache = {
+			LRU: require("lru-cache"),
+			getIdsCaches: {},
+			dirtySock: io.connect(socketServiceUrl, { port: 443 }),
+			objectCache: {},
+			prepareCachedResponse: function (objectType, params) {
+				if (!cache.objectCache[objectType]) {
+					cache.objectCache[objectType] = {};
+				}
+				if (params && params.fields) {
+					console.log('"Fields" is not supported for a cached Connector-query');
+					delete params.fields;
+				}
+			},
+			isAvailable: function (objectType, objectId) {
+				return cache.objectCache[objectType] && cache.objectCache[objectType][objectId];
+			}
+		};
+
+		cache.dirtySock.on('connect', function () {
+			cache.dirtySock.emit('join', communibaseAdministrationId + '_dirty');
+		});
+		cache.dirtySock.on('message', function (dirtyness) {
+			var dirtyInfo = dirtyness.split('|');
+			if (dirtyInfo.length !== 2) {
+				console.log(new Date() + ': Got weird dirty sock data? ' + dirtyness);
+				return;
+			}
+			cache.getIdsCaches[dirtyInfo[0]] = null;
+			if ((dirtyInfo.length === 2) && cache.objectCache[dirtyInfo[0]]) {
+				cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
+			}
+		});
+	}
 };
 
 Connector.prototype.Error = CommunibaseError;

@@ -98,10 +98,12 @@ The ```update```-Promise may be rejected if an entity is not considered valid. T
 }
 ```
 
-Bonus features:
+Bonus features
+==============
 --
 
-create a readable stream from a File ID:
+create a readable stream
+------------------------
 
 ```
 
@@ -109,7 +111,8 @@ cbc.createReadStream(fileId) : Stream;
 
 ```
 
-Work with document history:
+Work with document history
+--------------------------
 
 ```
 
@@ -137,9 +140,11 @@ var participantCounters = cbc.aggregate('Event', [
 
 ```
 
-Work with "DocumentReferences". A DocumentReference is a unified specification to point to some other (sub-)doucment
-within the administration. A DocumentReference looks like:
+Work with "DocumentReferences"
+------------------------------
 
+A DocumentReference is a unified specification to point to some other (sub-)doucment
+within the administration. A DocumentReference looks like:
 
 ```
 {
@@ -156,3 +161,16 @@ within the administration. A DocumentReference looks like:
 ```
 
 The contents will be parsed and the requested data will be retrieved.
+
+EXPERIMENTAL - Work with local in-memory cache for query results
+----------------------------------------------------------------
+
+The connector may cache documents locally. To enable in-memory cache for a certain instance of the connector:
+
+```
+cbc.enableCache(communibaseAdministrationId, socketServiceUrl)
+
+```
+
+Contact Kingsquare for these values in your particular scenario and use with caution: BEWARE of excessive memory usage!
+

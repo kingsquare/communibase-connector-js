@@ -8,9 +8,13 @@ if (process.env.COMMUNIBASE_KEY) {
 	delete process.env.COMMUNIBASE_KEY;
 }
 
-var cbc = require('../index.js'), when = require('when'), assert = require('assert'), ids, newHenk, _;
+var cbc, when, assert, ids, newHenk, _, moment;
 
+cbc = require('../index.js')
 _ = require('lodash');
+when = require('when')
+moment = require('moment');
+assert = require('assert');
 
 describe('Connector', function () {
 	this.timeout(10000);
@@ -133,7 +137,7 @@ describe('Connector', function () {
 		it('should create a valid person', function (done) {
 			cbc.update('Person', {
 				firstName: 'Henk',
-				registeredDate: new Date()
+				registeredDate: moment().startOf('day').toDate()
 			}).then(function (result) {
 				assert.equal((result._id === undefined), false);
 				newHenk = result;

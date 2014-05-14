@@ -1,5 +1,5 @@
 'use strict';
-var when, restler, _, async, http, https, stream, Connector, io;
+var when, restler, _, async, http, https, stream, Connector, io, LRU;
 
 when = require('when');
 restler = require('restler');
@@ -9,6 +9,7 @@ http = require('http');
 https = require('https');
 stream = require('stream');
 io = require('socket.io-client');
+LRU = require("lru-cache");
 
 function CommunibaseError(data) {
 	this.name = "CommunibaseError";
@@ -99,7 +100,7 @@ Connector = function (key) {
 			}
 		});
 		return deferred.promise;
-	}
+	};
 
 
 	/**
@@ -255,7 +256,7 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getAll = function (objectType, params) {
-		var deferred, self;
+		var deferred;
 
 		if (cache && !(params && params.fields)) {
 			return this.search(objectType, {}, params);
@@ -282,10 +283,31 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getIds = function (objectType, selector, params) {
-		var queryParams = { fields: '_id' };
-		return this.search(objectType, selector, _.extend(queryParams, params)).then(function (result) {
+		var hash, result;
+
+		if (cache) {
+			hash = JSON.stringify(arguments);
+			if (!cache.getIdsCaches[objectType]) {
+				cache.getIdsCaches[objectType] = LRU(100); // 100 getIds are cached, per entityType
+			}
+			result = cache.getIdsCaches[objectType].get(hash);
+			if (result) {
+				return when(result);
+			}
+		}
+
+		result = this.search(objectType, selector, _.extend({ fields: '_id' }, params)).then(function (result) {
 			return _.pluck(result, '_id');
 		});
+
+		if (cache) {
+			return result.then(function (ids) {
+				cache.getIdsCaches[objectType].set(hash, ids);
+				return ids;
+			});
+		}
+
+		return result;
 	};
 
 	/**
@@ -306,7 +328,7 @@ Connector = function (key) {
 	 * @param objectType
 	 * @param selector - mongodb style
 	 * @param params
-	 * @returns promise for objects
+	 * @returns {Promise} for objects
 	 */
 	this.search = function (objectType, selector, params) {
 		if (cache && !(params && params.fields)) {
@@ -453,7 +475,7 @@ Connector = function (key) {
 	 * @return {Promise} for referred object
 	 */
 	this.getByRef = function (ref, parentDocument) {
-		var rootDocumentEntityTypeParts, entityParts, parentDocumentPromise;
+		var rootDocumentEntityTypeParts, parentDocumentPromise;
 
 		if (!(ref && ref.rootDocumentEntityType && ref.rootDocumentId)) {
 			return when.reject(new Error('Please provide a documentReference object with a type and id'));
@@ -531,19 +553,9 @@ Connector = function (key) {
 
 	this.enableCache = function (communibaseAdministrationId, socketServiceUrl) {
 		cache = {
-			LRU: require("lru-cache"),
 			getIdsCaches: {},
 			dirtySock: io.connect(socketServiceUrl, { port: 443 }),
 			objectCache: {},
-			prepareCachedResponse: function (objectType, params) {
-				if (!cache.objectCache[objectType]) {
-					cache.objectCache[objectType] = {};
-				}
-				if (params && params.fields) {
-					console.log('"Fields" is not supported for a cached Connector-query');
-					delete params.fields;
-				}
-			},
 			isAvailable: function (objectType, objectId) {
 				return cache.objectCache[objectType] && cache.objectCache[objectType][objectId];
 			}

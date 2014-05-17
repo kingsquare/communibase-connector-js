@@ -288,7 +288,7 @@ Connector = function (key) {
 		if (cache) {
 			hash = JSON.stringify(arguments);
 			if (!cache.getIdsCaches[objectType]) {
-				cache.getIdsCaches[objectType] = LRU(100); // 100 getIds are cached, per entityType
+				cache.getIdsCaches[objectType] = LRU(1000); // 1000 getIds are cached, per entityType
 			}
 			result = cache.getIdsCaches[objectType].get(hash);
 			if (result) {
@@ -531,9 +531,20 @@ Connector = function (key) {
 	 *
 	 */
 	this.aggregate = function (objectType, aggregationPipeline) {
-		var deferred;
+		var deferred, hash, result;
 		if (!_.isArray(aggregationPipeline) || aggregationPipeline.length === 0)  {
 			return when.reject(new Error('Please provide a valid Aggregation Pipeline.'));
+		}
+
+		if (cache) {
+			hash = JSON.stringify(arguments);
+			if (!cache.aggregateCaches[objectType]) {
+				cache.aggregateCaches[objectType] = LRU(1000); // 1000 getIds are cached, per entityType
+			}
+			result = cache.aggregateCaches[objectType].get(hash);
+			if (result) {
+				return when(result);
+			}
 		}
 
 		deferred = when.defer();
@@ -548,12 +559,23 @@ Connector = function (key) {
 				data: JSON.stringify(aggregationPipeline)
 			}
 		});
-		return deferred.promise;
+
+		result = deferred.promise;
+
+		if (cache) {
+			return result.then(function (result) {
+				cache.aggregateCaches[objectType].set(hash, result);
+				return result;
+			});
+		}
+
+		return result;
 	};
 
 	this.enableCache = function (communibaseAdministrationId, socketServiceUrl) {
 		cache = {
 			getIdsCaches: {},
+			aggregateCaches: {},
 			dirtySock: io.connect(socketServiceUrl, { port: 443 }),
 			objectCache: {},
 			isAvailable: function (objectType, objectId) {
@@ -571,6 +593,7 @@ Connector = function (key) {
 				return;
 			}
 			cache.getIdsCaches[dirtyInfo[0]] = null;
+			cache.aggregateCaches[dirtyInfo[0]] = null;
 			if ((dirtyInfo.length === 2) && cache.objectCache[dirtyInfo[0]]) {
 				cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
 			}

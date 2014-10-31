@@ -5,6 +5,14 @@
 //Can not perform test, key exists
 if (!process.env.SOCKET_SERVICE_URL) {
 	throw Error('Please set SOCKET_SERVICE_URL environment variable to test cached-behaviour');
+	process.exit();
+	return;
+}
+
+//Can not perform test, key exists
+if (!process.env.SIESTA_TEST_KEY) {
+	throw Error('Please set SIESTA_TEST_KEY for proper testing');
+	process.exit();
 	return;
 }
 
@@ -29,7 +37,7 @@ describe('Connector', function () {
 		});
 
 		it('should be able to construct a clone with a different key', function (done) {
-			cbc = cbc.clone('Btd4tz7WCaPI7zbUUaY6PxF4YePEN');
+			cbc = cbc.clone(process.env.SIESTA_TEST_KEY);
 			cbc.enableCache('51909dece4b02025890fc089', process.env.SOCKET_SERVICE_URL);
 			cbc.getAll('EntityType').then(function () {
 				done();

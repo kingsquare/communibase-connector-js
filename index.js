@@ -11,11 +11,24 @@ stream = require('stream');
 io = require('socket.io-client');
 LRU = require("lru-cache");
 
-function CommunibaseError(data) {
+function CommunibaseError(data, task) {
 	this.name = "CommunibaseError";
 	this.code = (data.code || 500);
 	this.message = (data.message || "");
 	this.errors = (data.errors || {});
+	this.debugInfo = null;
+
+	if ((_.size(this.errors) === 0) && task) {
+		//try and make this a bit more debuggable
+		this.debugInfo = {
+			method: task.method,
+			url: task.url,
+			headers: (task.options ? task.options.headers : null),
+			data: ((task.options && task.options.data && task.options.toString) ? task.options.data.toString() : '')
+		}
+	}
+
+	Error.captureStackTrace(this, CommunibaseError);
 }
 
 CommunibaseError.prototype = Error.prototype;
@@ -56,7 +69,7 @@ Connector = function (key) {
 
 		fail = function (error) {
 			if (!(error instanceof Error)) {
-				error =  new CommunibaseError(error);
+				error = new CommunibaseError(error, task);
 			}
 			task.deferred.reject(error);
 			callback();

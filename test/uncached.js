@@ -10,9 +10,9 @@ if (process.env.COMMUNIBASE_KEY) {
 
 var cbc, when, assert, ids, newHenk, _, moment;
 
-cbc = require('../index.js')
+cbc = require('../index.js');
 _ = require('lodash');
-when = require('when')
+when = require('when');
 moment = require('moment');
 assert = require('assert');
 
@@ -28,7 +28,7 @@ describe('Connector', function () {
 		});
 
 		it('should be able to construct a clone with a different key', function (done) {
-			cbc = cbc.clone('Btd4tz7WCaPI7zbUUaY6PxF4YePEN');
+			cbc = cbc.clone(process.env.SIESTA_TEST_KEY);
 			cbc.getAll('EntityType').then(function () {
 				done();
 			}, function (err) {

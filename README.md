@@ -60,6 +60,8 @@ cbc.update(entityType, document): Promise for Entity;
 
 cbc.destroy(entityType, id): Promise for null;
 
+cbc.undelete(entityType, id): Promise for null;
+
 ```
 
 Entity

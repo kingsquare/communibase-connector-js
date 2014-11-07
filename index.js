@@ -412,6 +412,25 @@ Connector = function (key) {
 	};
 
 	/**
+	 * Undelete something from Communibase
+	 *
+	 * @param objectType
+	 * @param objectId
+	 * @returns promise (for null)
+	 */
+	this.undelete = function (objectType, objectId) {
+		var deferred = when.defer();
+
+		this.queue.push({
+			deferred: deferred,
+			method: 'post',
+			url: serviceUrl + objectType + '.json/history/undelete/' + objectId
+		});
+
+		return deferred.promise;
+	};
+
+	/**
 	 * Get a Promise for a Read stream for a File stored in Communibase
 	 *
 	 * @param fileId

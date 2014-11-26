@@ -31,6 +31,11 @@ When you need to connect using multiple Communibase API Keys for some reason, yo
 cbc = require('communibase-connector-js').clone(<your api key here>);
 ```
 
+If you need to connect to a specific version of the endpoint, you may want to set a environment variable ```COMMUNIBASE_API_URL``` e.g.
+```
+COMMUNIBASE_API_URL=https://api.communibase.nl/0.1/
+```
+
 API
 ---
 

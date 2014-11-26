@@ -43,7 +43,7 @@ Connector = function (key) {
 
 	getByIdQueue = {};
 	getByIdPrimed = false;
-	serviceUrl = 'https://api.communibase.nl/0.1/';
+	serviceUrl = process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/';
 	serviceUrlIsHttps = true;
 	cache = null;
 

@@ -25,7 +25,7 @@ function CommunibaseError(data, task) {
 			url: task.url,
 			headers: (task.options ? task.options.headers : null),
 			data: ((task.options && task.options.data && task.options.toString) ? task.options.data.toString() : '')
-		}
+		};
 	}
 
 	Error.captureStackTrace(this, CommunibaseError);
@@ -97,7 +97,7 @@ Connector = function (key) {
 	 * Bare boned search
 	 * @returns {Promise}
 	 *
-	 ***/
+	 */
 	this._search = function (objectType, selector, params) {
 		var deferred = when.defer();
 		this.queue.push({
@@ -130,12 +130,12 @@ Connector = function (key) {
 	 * Default object retrieval: should provide cachable objects
 	 */
 	this.spoolQueue = function () {
-		var self = this;
+		var me = this;
 		_.each(getByIdQueue, function (deferredsById, objectType) {
 			var objectIds = _.keys(deferredsById);
 			getByIdQueue[objectType] = {};
 
-			self._getByIds(objectType, objectIds).then(
+			me._getByIds(objectType, objectIds).then(
 				function (objects) {
 					var objectHash = _.indexBy(objects, '_id');
 					_.each(objectIds, function (objectId) {
@@ -166,7 +166,6 @@ Connector = function (key) {
 	 * @returns {Promise} - for object: a key/value object with object data
 	 */
 	this.getById = function (objectType, objectId, params, versionId) {
-		var self = this;
 		if (!_.isString(objectId)) {
 			return when.reject(new Error('Invalid objectId'));
 		}
@@ -212,8 +211,9 @@ Connector = function (key) {
 		}
 
 		if (!getByIdPrimed) {
+			var me = this;
 			process.nextTick(function () {
-				self.spoolQueue();
+				me.spoolQueue();
 			});
 			getByIdPrimed = true;
 		}
@@ -230,7 +230,6 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getByIds = function (objectType, objectIds, params) {
-		var promises, self;
 		if (objectIds.length === 0) {
 			return when([]);
 		}
@@ -240,10 +239,9 @@ Connector = function (key) {
 			return this._getByIds(objectType, objectIds, params);
 		}
 
-		promises = [];
-		self = this;
+		var promises = [], me = this;
 		_.each(objectIds, function (objectId) {
-			promises.push(self.getById(objectType, objectId, params));
+			promises.push(me.getById(objectType, objectId, params));
 		});
 		return when.settle(promises).then(function (descriptors) {
 			var result = [], error = null;
@@ -345,9 +343,9 @@ Connector = function (key) {
 	 */
 	this.search = function (objectType, selector, params) {
 		if (cache && !(params && params.fields)) {
-			var self = this;
-			return this.getIds(objectType, selector, params).then(function (ids) {
-				return self.getByIds(objectType, ids);
+			var me = this;
+			return me.getIds(objectType, selector, params).then(function (ids) {
+				return me.getByIds(objectType, ids);
 			});
 		}
 
@@ -368,9 +366,9 @@ Connector = function (key) {
 	this.update = function (objectType, object) {
 		var deferred = when.defer(), operation = ((object._id && (object._id.length > 0)) ? 'put' : 'post');
 
-		if (object['_id'] && cache && cache.objectCache && cache.objectCache[objectType] &&
-				cache.objectCache[objectType][object['_id']])  {
-			cache.objectCache[objectType][object['_id']] = null;
+		if (object._id && cache && cache.objectCache && cache.objectCache[objectType] &&
+				cache.objectCache[objectType][object._id])  {
+			cache.objectCache[objectType][object._id] = null;
 		}
 
 		this.queue.push({
@@ -560,7 +558,6 @@ Connector = function (key) {
 	 * { "$unwind": "$participants" },
 	 * { "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
 	 * ]
-	 *
 	 */
 	this.aggregate = function (objectType, aggregationPipeline) {
 		var deferred, hash, result;
@@ -604,6 +601,10 @@ Connector = function (key) {
 		return result;
 	};
 
+	/**
+	 * @param communibaseAdministrationId
+	 * @param socketServiceUrl
+	 */
 	this.enableCache = function (communibaseAdministrationId, socketServiceUrl) {
 		cache = {
 			getIdsCaches: {},
@@ -630,7 +631,7 @@ Connector = function (key) {
 				cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
 			}
 		});
-	}
+	};
 };
 
 Connector.prototype.Error = CommunibaseError;

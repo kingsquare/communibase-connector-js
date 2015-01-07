@@ -271,7 +271,7 @@ describe('Connector', function () {
 			}).then(function (address) {
 				console.log(address);
 				done(new Error('Should not find something'));
-			}, function (err) {
+			}, function (/*err*/) {
 				done();
 			});
 		});

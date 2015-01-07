@@ -1,9 +1,8 @@
-//2
 var fs = require('fs');
 var when = require('when');
 var _ = require('lodash');
 describe('Async connectors', function (done) {
-	var apiKeysWithGroupIds, cbc;
+	var cbc;
 
 	this.timeout(10000);
 

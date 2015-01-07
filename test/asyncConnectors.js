@@ -1,10 +1,7 @@
-//2
 var fs = require('fs');
 var when = require('when');
 var _ = require('lodash');
 describe('Async connectors', function (done) {
-	var apiKeysWithGroupIds, cbc;
-
 	this.timeout(10000);
 
 	try {
@@ -15,7 +12,7 @@ describe('Async connectors', function (done) {
 		return;
 	}
 
-	cbc = require('../index.js');
+	var cbc = require('../index.js');
 	it('should work with multiple connectors in multiple administratations', function (done) {
 		var promises = [], cbcs = {};
 

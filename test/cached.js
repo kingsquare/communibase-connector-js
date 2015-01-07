@@ -4,26 +4,21 @@
 
 //Can not perform test, key exists
 if (!process.env.SOCKET_SERVICE_URL) {
-	throw Error('Please set SOCKET_SERVICE_URL environment variable to test cached-behaviour');
-	process.exit();
-	return;
+	throw new Error('Please set SOCKET_SERVICE_URL environment variable to test cached-behaviour');
 }
 
 //Can not perform test, key exists
 if (!process.env.SIESTA_TEST_KEY) {
-	throw Error('Please set SIESTA_TEST_KEY for proper testing');
-	process.exit();
-	return;
+	throw new Error('Please set SIESTA_TEST_KEY for proper testing');
 }
 
-var cbc, when, assert, ids, newHenk, _, moment;
-
-cbc = require('../index.js');
-
-_ = require('lodash');
-when = require('when');
-moment = require('moment');
-assert = require('assert');
+var ids,
+	newHenk,
+	cbc = require('../index.js'),
+	_ = require('lodash'),
+	when = require('when'),
+	moment = require('moment'),
+	assert = require('assert');
 
 describe('Connector', function () {
 	this.timeout(10000);
@@ -194,10 +189,10 @@ describe('Connector', function () {
 
 	describe('queue handling', function () {
 		it('should handle/queue a lot of requests properly', function (done) {
-			var i, promise, resultPromises = [], assertEqual = function (result) {
+			var promise, resultPromises = [], assertEqual = function (result) {
 				assert.equal(result.length, 1);
 			};
-			for (i = 0; i < 100; i += 1) {
+			for (var i = 0; i < 100; i += 1) {
 				promise = cbc.search('EntityType', { "_id": ids[0] }).then(assertEqual);
 				resultPromises.push(promise);
 			}
@@ -282,7 +277,7 @@ describe('Connector', function () {
 			}).then(function (address) {
 				console.log(address);
 				done(new Error('Should not find something'));
-			}, function (err) {
+			}, function (/*err*/) {
 				done();
 			});
 		});

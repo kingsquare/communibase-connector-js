@@ -25,7 +25,7 @@ function CommunibaseError(data, task) {
 			url: task.url,
 			headers: (task.options ? task.options.headers : null),
 			data: ((task.options && task.options.data && task.options.toString) ? task.options.data.toString() : '')
-		}
+		};
 	}
 
 	Error.captureStackTrace(this, CommunibaseError);
@@ -39,13 +39,11 @@ CommunibaseError.prototype = Error.prototype;
  * @constructor
  */
 Connector = function (key) {
-	var getByIdQueue, getByIdPrimed, serviceUrl, serviceUrlIsHttps, cache;
-
-	getByIdQueue = {};
-	getByIdPrimed = false;
-	serviceUrl = process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/';
-	serviceUrlIsHttps = true;
-	cache = null;
+	var getByIdQueue = {},
+		getByIdPrimed = false,
+		serviceUrl = process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/',
+		serviceUrlIsHttps = true,
+		cache = null;
 
 	this.setServiceUrl = function (newServiceUrl) {
 		serviceUrl = newServiceUrl;
@@ -53,9 +51,7 @@ Connector = function (key) {
 	};
 
 	this.queue = async.queue(function (task, callback) {
-		var success, fail;
-
-		success = function (result) {
+		var success = function (result) {
 			var deferred = task.deferred;
 			if (result.metadata && result.records) {
 				deferred.promise.metadata = result.metadata;
@@ -67,7 +63,7 @@ Connector = function (key) {
 			callback();
 		};
 
-		fail = function (error) {
+		var fail = function (error) {
 			if (!(error instanceof Error)) {
 				error = new CommunibaseError(error, task);
 			}
@@ -97,7 +93,7 @@ Connector = function (key) {
 	 * Bare boned search
 	 * @returns {Promise}
 	 *
-	 ***/
+	 */
 	this._search = function (objectType, selector, params) {
 		var deferred = when.defer();
 		this.queue.push({
@@ -166,7 +162,6 @@ Connector = function (key) {
 	 * @returns {Promise} - for object: a key/value object with object data
 	 */
 	this.getById = function (objectType, objectId, params, versionId) {
-		var self = this;
 		if (!_.isString(objectId)) {
 			return when.reject(new Error('Invalid objectId'));
 		}
@@ -212,6 +207,7 @@ Connector = function (key) {
 		}
 
 		if (!getByIdPrimed) {
+			var self = this;
 			process.nextTick(function () {
 				self.spoolQueue();
 			});
@@ -230,7 +226,6 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getByIds = function (objectType, objectIds, params) {
-		var promises, self;
 		if (objectIds.length === 0) {
 			return when([]);
 		}
@@ -240,8 +235,7 @@ Connector = function (key) {
 			return this._getByIds(objectType, objectIds, params);
 		}
 
-		promises = [];
-		self = this;
+		var promises = [], self = this;
 		_.each(objectIds, function (objectId) {
 			promises.push(self.getById(objectType, objectId, params));
 		});
@@ -269,13 +263,11 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getAll = function (objectType, params) {
-		var deferred;
-
 		if (cache && !(params && params.fields)) {
 			return this.search(objectType, {}, params);
 		}
 
-		deferred = when.defer();
+		var deferred = when.defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'get',
@@ -346,7 +338,7 @@ Connector = function (key) {
 	this.search = function (objectType, selector, params) {
 		if (cache && !(params && params.fields)) {
 			var self = this;
-			return this.getIds(objectType, selector, params).then(function (ids) {
+			return self.getIds(objectType, selector, params).then(function (ids) {
 				return self.getByIds(objectType, ids);
 			});
 		}
@@ -368,9 +360,9 @@ Connector = function (key) {
 	this.update = function (objectType, object) {
 		var deferred = when.defer(), operation = ((object._id && (object._id.length > 0)) ? 'put' : 'post');
 
-		if (object['_id'] && cache && cache.objectCache && cache.objectCache[objectType] &&
-				cache.objectCache[objectType][object['_id']])  {
-			cache.objectCache[objectType][object['_id']] = null;
+		if (object._id && cache && cache.objectCache && cache.objectCache[objectType] &&
+				cache.objectCache[objectType][object._id])  {
+			cache.objectCache[objectType][object._id] = null;
 		}
 
 		this.queue.push({
@@ -507,13 +499,13 @@ Connector = function (key) {
 	 * @return {Promise} for referred object
 	 */
 	this.getByRef = function (ref, parentDocument) {
-		var rootDocumentEntityTypeParts, parentDocumentPromise;
 
 		if (!(ref && ref.rootDocumentEntityType && ref.rootDocumentId)) {
 			return when.reject(new Error('Please provide a documentReference object with a type and id'));
 		}
 
-		rootDocumentEntityTypeParts =  ref.rootDocumentEntityType.split('.');
+		var rootDocumentEntityTypeParts =  ref.rootDocumentEntityType.split('.'),
+			parentDocumentPromise;
 		if (rootDocumentEntityTypeParts[0] !== 'parent') {
 			parentDocumentPromise = this.getById(ref.rootDocumentEntityType, ref.rootDocumentId);
 		} else {
@@ -560,14 +552,13 @@ Connector = function (key) {
 	 * { "$unwind": "$participants" },
 	 * { "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
 	 * ]
-	 *
 	 */
 	this.aggregate = function (objectType, aggregationPipeline) {
-		var deferred, hash, result;
 		if (!_.isArray(aggregationPipeline) || aggregationPipeline.length === 0)  {
 			return when.reject(new Error('Please provide a valid Aggregation Pipeline.'));
 		}
 
+		var hash, result;
 		if (cache) {
 			hash = JSON.stringify(arguments);
 			if (!cache.aggregateCaches[objectType]) {
@@ -579,7 +570,7 @@ Connector = function (key) {
 			}
 		}
 
-		deferred = when.defer();
+		var deferred = when.defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'post',
@@ -604,6 +595,10 @@ Connector = function (key) {
 		return result;
 	};
 
+	/**
+	 * @param communibaseAdministrationId
+	 * @param socketServiceUrl
+	 */
 	this.enableCache = function (communibaseAdministrationId, socketServiceUrl) {
 		cache = {
 			getIdsCaches: {},
@@ -630,7 +625,7 @@ Connector = function (key) {
 				cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
 			}
 		});
-	}
+	};
 };
 
 Connector.prototype.Error = CommunibaseError;

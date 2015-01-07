@@ -39,13 +39,11 @@ CommunibaseError.prototype = Error.prototype;
  * @constructor
  */
 Connector = function (key) {
-	var getByIdQueue, getByIdPrimed, serviceUrl, serviceUrlIsHttps, cache;
-
-	getByIdQueue = {};
-	getByIdPrimed = false;
-	serviceUrl = process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/';
-	serviceUrlIsHttps = true;
-	cache = null;
+	var getByIdQueue = {},
+		getByIdPrimed = false,
+		serviceUrl = process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/',
+		serviceUrlIsHttps = true,
+		cache = null;
 
 	this.setServiceUrl = function (newServiceUrl) {
 		serviceUrl = newServiceUrl;
@@ -53,9 +51,7 @@ Connector = function (key) {
 	};
 
 	this.queue = async.queue(function (task, callback) {
-		var success, fail;
-
-		success = function (result) {
+		var success = function (result) {
 			var deferred = task.deferred;
 			if (result.metadata && result.records) {
 				deferred.promise.metadata = result.metadata;
@@ -67,7 +63,7 @@ Connector = function (key) {
 			callback();
 		};
 
-		fail = function (error) {
+		var fail = function (error) {
 			if (!(error instanceof Error)) {
 				error = new CommunibaseError(error, task);
 			}
@@ -267,13 +263,11 @@ Connector = function (key) {
 	 * @returns {Promise} - for array of key/value objects
 	 */
 	this.getAll = function (objectType, params) {
-		var deferred;
-
 		if (cache && !(params && params.fields)) {
 			return this.search(objectType, {}, params);
 		}
 
-		deferred = when.defer();
+		var deferred = when.defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'get',
@@ -505,13 +499,13 @@ Connector = function (key) {
 	 * @return {Promise} for referred object
 	 */
 	this.getByRef = function (ref, parentDocument) {
-		var rootDocumentEntityTypeParts, parentDocumentPromise;
 
 		if (!(ref && ref.rootDocumentEntityType && ref.rootDocumentId)) {
 			return when.reject(new Error('Please provide a documentReference object with a type and id'));
 		}
 
-		rootDocumentEntityTypeParts =  ref.rootDocumentEntityType.split('.');
+		var rootDocumentEntityTypeParts =  ref.rootDocumentEntityType.split('.'),
+			parentDocumentPromise;
 		if (rootDocumentEntityTypeParts[0] !== 'parent') {
 			parentDocumentPromise = this.getById(ref.rootDocumentEntityType, ref.rootDocumentId);
 		} else {
@@ -560,11 +554,11 @@ Connector = function (key) {
 	 * ]
 	 */
 	this.aggregate = function (objectType, aggregationPipeline) {
-		var deferred, hash, result;
 		if (!_.isArray(aggregationPipeline) || aggregationPipeline.length === 0)  {
 			return when.reject(new Error('Please provide a valid Aggregation Pipeline.'));
 		}
 
+		var hash, result;
 		if (cache) {
 			hash = JSON.stringify(arguments);
 			if (!cache.aggregateCaches[objectType]) {
@@ -576,7 +570,7 @@ Connector = function (key) {
 			}
 		}
 
-		deferred = when.defer();
+		var deferred = when.defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'post',

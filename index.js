@@ -130,12 +130,12 @@ Connector = function (key) {
 	 * Default object retrieval: should provide cachable objects
 	 */
 	this.spoolQueue = function () {
-		var me = this;
+		var self = this;
 		_.each(getByIdQueue, function (deferredsById, objectType) {
 			var objectIds = _.keys(deferredsById);
 			getByIdQueue[objectType] = {};
 
-			me._getByIds(objectType, objectIds).then(
+			self._getByIds(objectType, objectIds).then(
 				function (objects) {
 					var objectHash = _.indexBy(objects, '_id');
 					_.each(objectIds, function (objectId) {
@@ -211,9 +211,9 @@ Connector = function (key) {
 		}
 
 		if (!getByIdPrimed) {
-			var me = this;
+			var self = this;
 			process.nextTick(function () {
-				me.spoolQueue();
+				self.spoolQueue();
 			});
 			getByIdPrimed = true;
 		}
@@ -239,9 +239,9 @@ Connector = function (key) {
 			return this._getByIds(objectType, objectIds, params);
 		}
 
-		var promises = [], me = this;
+		var promises = [], self = this;
 		_.each(objectIds, function (objectId) {
-			promises.push(me.getById(objectType, objectId, params));
+			promises.push(self.getById(objectType, objectId, params));
 		});
 		return when.settle(promises).then(function (descriptors) {
 			var result = [], error = null;
@@ -343,9 +343,9 @@ Connector = function (key) {
 	 */
 	this.search = function (objectType, selector, params) {
 		if (cache && !(params && params.fields)) {
-			var me = this;
-			return me.getIds(objectType, selector, params).then(function (ids) {
-				return me.getByIds(objectType, ids);
+			var self = this;
+			return self.getIds(objectType, selector, params).then(function (ids) {
+				return self.getByIds(objectType, ids);
 			});
 		}
 

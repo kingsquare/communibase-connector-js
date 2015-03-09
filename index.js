@@ -482,6 +482,28 @@ Connector = function (key) {
 	};
 
 	/**
+	 *
+	 * @param {string} objectType
+	 * @param {Object} selector
+	 * @returns promise for VersionInformation[]
+	 */
+	this.historySearch = function (objectType, selector) {
+		var deferred = when.defer();
+		this.queue.push({
+			deferred: deferred,
+			method: 'post',
+			url: serviceUrl + objectType + '.json/history/search',
+			options: {
+				headers: {
+					'content-type': 'application/json'
+				},
+				data: JSON.stringify(selector)
+			}
+		});
+		return deferred.promise;
+	};
+
+	/**
 	 * Get a single object by a DocumentReference-object. A DocumentReference object looks like
 	 * {
 	 *	rootDocumentId: '524aca8947bd91000600000c',

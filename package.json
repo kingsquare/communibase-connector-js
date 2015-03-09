@@ -1,25 +1,25 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "dependencies": {
-    "when": "~3.1.0",
-    "restler": "~3.2.0",
-    "async": "~0.8.0",
-    "lodash": "^2.4.1",
+    "async": "^0.9.0",
+    "lodash": "^3.5.0",
     "lru-cache": "^2.5.0",
-    "socket.io-client": "^0.9.16"
+    "restler": "^3.2.2",
+    "socket.io-client": "^1.3.5",
+    "when": "^3.7.2"
   },
   "devDependencies": {
-    "mocha": "~1.18.0",
-	"moment": "*"
+    "mocha": "^2.2.1",
+    "moment": "^2.9.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/kingsquare/communibase-connector-js.git"
   },
   "engines": {
-    "node": "~0.10.26"
+    "node": "~0.10.36"
   },
   "scripts": {
     "test": "mocha test"

@@ -68,7 +68,7 @@ cbc.undelete(entityType, id): Promise for null;
 
 Entity
 --
-An entity is an plain JavaScript object: a key/value store of data in Communibase.
+An entity is an plain JavaScript object: a key/value store of data in Communibase, also called "document".
 
 E.g.
 
@@ -119,15 +119,15 @@ Work with document history
 First, find the _id of both the document and the version you are looking for. To find all available versions of a specific document, use
 
 ```js
-cbc.getHistory(entityType, id) : VersionInformation[];
+cbc.getHistory(entityType, id) : Promise for  VersionInformation[];
 ```
 
 Alternatively, you can search the entire history of documents to look for specific properties. e.g.
 
 ```js
-cbc.historySearch('Person', { firstName: 'Tim' }).then(function (versionInformation) {
-	//all versions of any person (even deleted documents) ever with first name Tim.
-});
+//Lookup all versions of any person (even deleted documents) ever with first name Tim.
+
+cbc.historySearch('Person', { firstName: 'Tim' }): Promise for VersionInformation[] 
 ```
 
 VersionInformation has the following structure
@@ -136,13 +136,10 @@ VersionInformation has the following structure
 * updatedAt - The date this version was created
 * updatedBy - A human readable description describing who created it
  
-peopleCalledTim
- 
-Now lookup that specific version via the API
+With an _id and a refId, we can lookup that specific version via the API
  
 ```js
-//Same as above, but with versionId specified...
-cbc.getById(entityType, id, params, versionId) : Promise for Entity;
+cbc.getById(entityType, id, params, versionId) : Promise for version of document;
 ```
 
 Aggregate document data via Mongodb pipeline. For more information, see

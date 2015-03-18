@@ -8,13 +8,12 @@ if (process.env.COMMUNIBASE_KEY) {
 	delete process.env.COMMUNIBASE_KEY;
 }
 
-var ids,
-	newHenk,
-	cbc = require('../index.js'),
-	_ = require('lodash'),
-	when = require('when'),
-	moment = require('moment'),
-	assert = require('assert');
+var ids, newHenk;
+var cbc = require('../index.js');
+var _ = require('lodash');
+var moment = require('moment');
+var assert = require('assert');
+var Promise = require('bluebird');
 
 describe('Connector', function () {
 	this.timeout(10000);
@@ -192,7 +191,7 @@ describe('Connector', function () {
 				resultPromises.push(promise);
 			}
 
-			when.all(resultPromises).then(function (result) {
+			Promise.all(resultPromises).then(function (result) {
 				assert.equal(result.length, 100);
 				done();
 			});

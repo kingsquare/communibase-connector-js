@@ -1,6 +1,7 @@
 var fs = require('fs');
-var when = require('when');
 var _ = require('lodash');
+var Proimse = require('bluebird');
+
 describe('Async connectors', function (done) {
 	this.timeout(10000);
 
@@ -24,7 +25,7 @@ describe('Async connectors', function (done) {
 			promises.push(cbcs[apiKey].getById('Group', groupId));
 		});
 
-		when.all(promises).then(function () {
+		Promise.all(promises).then(function () {
 			done();
 		}, done);
 	});

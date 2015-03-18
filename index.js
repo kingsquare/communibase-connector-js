@@ -1,15 +1,27 @@
 'use strict';
-var when, restler, _, async, http, https, stream, Connector, io, LRU;
 
-when = require('when');
-restler = require('restler');
-_ = require('lodash');
-async = require('async');
-http = require('http');
-https = require('https');
-stream = require('stream');
-io = require('socket.io-client');
-LRU = require("lru-cache");
+var restler = require('restler');
+var _ = require('lodash');
+var async = require('async');
+var http = require('http');
+var https = require('https');
+var stream = require('stream');
+var io = require('socket.io-client');
+var LRU = require("lru-cache");
+var Promise = require('bluebird');
+
+function defer() {
+	var resolve, reject;
+	var promise = new Promise(function() {
+		resolve = arguments[0];
+		reject = arguments[1];
+	});
+	return {
+		resolve: resolve,
+		reject: reject,
+		promise: promise
+	};
+}
 
 function CommunibaseError(data, task) {
 	this.name = "CommunibaseError";
@@ -38,7 +50,7 @@ CommunibaseError.prototype = Error.prototype;
  * @param key - The communibase api key
  * @constructor
  */
-Connector = function (key) {
+var Connector = function (key) {
 	var getByIdQueue = {},
 		getByIdPrimed = false,
 		serviceUrl = process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/',
@@ -95,7 +107,7 @@ Connector = function (key) {
 	 *
 	 */
 	this._search = function (objectType, selector, params) {
-		var deferred = when.defer();
+		var deferred = defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'post',
@@ -163,12 +175,12 @@ Connector = function (key) {
 	 */
 	this.getById = function (objectType, objectId, params, versionId) {
 		if (!_.isString(objectId)) {
-			return when.reject(new Error('Invalid objectId'));
+			return Promise.reject(new Error('Invalid objectId'));
 		}
 
 		// not combinable...
 		if (versionId || (params && params.fields)) {
-			var deferred = when.defer();
+			var deferred = defer();
 			this.queue.push({
 				deferred: deferred,
 				method: 'get',
@@ -197,7 +209,7 @@ Connector = function (key) {
 			return getByIdQueue[objectType][objectId].promise;
 		}
 
-		getByIdQueue[objectType][objectId] = when.defer();
+		getByIdQueue[objectType][objectId] = defer();
 
 		if (cache) {
 			if (cache.objectCache[objectType] === undefined) {
@@ -227,7 +239,7 @@ Connector = function (key) {
 	 */
 	this.getByIds = function (objectType, objectIds, params) {
 		if (objectIds.length === 0) {
-			return when([]);
+			return Promise.resolve([]);
 		}
 
 		// not combinable...
@@ -236,22 +248,28 @@ Connector = function (key) {
 		}
 
 		var promises = [], self = this;
-		_.each(objectIds, function (objectId) {
+		objectIds.forEach(function (objectId) {
 			promises.push(self.getById(objectType, objectId, params));
 		});
-		return when.settle(promises).then(function (descriptors) {
+		return Promise.settle(promises).then(function (descriptors) {
 			var result = [], error = null;
-			_.each(descriptors, function (d) {
-				if (d.state === 'rejected') {
-					error = d.reason;
+			descriptors.forEach(function (descriptor) {
+				if (descriptor.isRejected()) {
+					error = descriptor.reason();
 					return;
 				}
-				result.push(d.value);
+				result.push(descriptor.value());
 			});
 			if (result.length) {
 				return result;
 			}
-			return when.reject(error);
+
+			if (error) {
+				throw new Error(error);
+			}
+
+			//return the empty array, if no results and no error
+			return result;
 		});
 	};
 
@@ -267,7 +285,7 @@ Connector = function (key) {
 			return this.search(objectType, {}, params);
 		}
 
-		var deferred = when.defer();
+		var deferred = defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'get',
@@ -297,7 +315,7 @@ Connector = function (key) {
 			}
 			result = cache.getIdsCaches[objectType].get(hash);
 			if (result) {
-				return when(result);
+				return Promise.resolve(result);
 			}
 		}
 
@@ -358,7 +376,7 @@ Connector = function (key) {
 	 * @returns promise for object (the created or updated object)
 	 */
 	this.update = function (objectType, object) {
-		var deferred = when.defer(), operation = ((object._id && (object._id.length > 0)) ? 'put' : 'post');
+		var deferred = defer(), operation = ((object._id && (object._id.length > 0)) ? 'put' : 'post');
 
 		if (object._id && cache && cache.objectCache && cache.objectCache[objectType] &&
 				cache.objectCache[objectType][object._id])  {
@@ -388,7 +406,7 @@ Connector = function (key) {
 	 * @returns promise (for null)
 	 */
 	this.destroy = function (objectType, objectId) {
-		var deferred = when.defer();
+		var deferred = defer();
 
 		if (cache && cache.objectCache && cache.objectCache[objectType] && cache.objectCache[objectType][objectId])  {
 			cache.objectCache[objectType][objectId] = null;
@@ -411,7 +429,7 @@ Connector = function (key) {
 	 * @returns promise (for null)
 	 */
 	this.undelete = function (objectType, objectId) {
-		var deferred = when.defer();
+		var deferred = defer();
 
 		this.queue.push({
 			deferred: deferred,
@@ -472,7 +490,7 @@ Connector = function (key) {
 	 * @returns promise for VersionInformation[]
 	 */
 	this.getHistory = function (objectType, objectId) {
-		var deferred = when.defer();
+		var deferred = defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'get',
@@ -488,7 +506,7 @@ Connector = function (key) {
 	 * @returns promise for VersionInformation[]
 	 */
 	this.historySearch = function (objectType, selector) {
-		var deferred = when.defer();
+		var deferred = defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'post',
@@ -523,7 +541,7 @@ Connector = function (key) {
 	this.getByRef = function (ref, parentDocument) {
 
 		if (!(ref && ref.rootDocumentEntityType && ref.rootDocumentId)) {
-			return when.reject(new Error('Please provide a documentReference object with a type and id'));
+			return Promise.reject(new Error('Please provide a documentReference object with a type and id'));
 		}
 
 		var rootDocumentEntityTypeParts =  ref.rootDocumentEntityType.split('.'),
@@ -531,7 +549,7 @@ Connector = function (key) {
 		if (rootDocumentEntityTypeParts[0] !== 'parent') {
 			parentDocumentPromise = this.getById(ref.rootDocumentEntityType, ref.rootDocumentId);
 		} else {
-			parentDocumentPromise = when(parentDocument);
+			parentDocumentPromise = Promise.resolve(parentDocument);
 		}
 
 		if (!(ref.path && ref.path.length && ref.path.length > 0)) {
@@ -559,7 +577,7 @@ Connector = function (key) {
 			if (result) {
 				return result;
 			}
-			return when.reject(new Error('The referred object within it\'s parent could not be found'));
+			throw new Error('The referred object within it\'s parent could not be found');
 		});
 	};
 
@@ -577,7 +595,7 @@ Connector = function (key) {
 	 */
 	this.aggregate = function (objectType, aggregationPipeline) {
 		if (!_.isArray(aggregationPipeline) || aggregationPipeline.length === 0)  {
-			return when.reject(new Error('Please provide a valid Aggregation Pipeline.'));
+			return Promise.reject(new Error('Please provide a valid Aggregation Pipeline.'));
 		}
 
 		var hash, result;
@@ -588,11 +606,11 @@ Connector = function (key) {
 			}
 			result = cache.aggregateCaches[objectType].get(hash);
 			if (result) {
-				return when(result);
+				return Promise.resolve(result);
 			}
 		}
 
-		var deferred = when.defer();
+		var deferred = defer();
 		this.queue.push({
 			deferred: deferred,
 			method: 'post',

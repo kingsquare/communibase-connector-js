@@ -1,6 +1,6 @@
 var fs = require('fs');
 var _ = require('lodash');
-var Proimse = require('bluebird');
+var Promise = require('bluebird');
 
 describe('Async connectors', function (done) {
 	this.timeout(10000);

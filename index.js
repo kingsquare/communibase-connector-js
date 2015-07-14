@@ -532,7 +532,7 @@ Connector.prototype.historySearch = function (objectType, selector) {
  */
 Connector.prototype.getByRef = function (ref, parentDocument) {
 
-	if (!(ref && ref.rootDocumentEntityType && ref.rootDocumentId)) {
+	if (!(ref && ref.rootDocumentEntityType && (ref.rootDocumentId || parentDocument))) {
 		return Promise.reject(new Error('Please provide a documentReference object with a type and id'));
 	}
 

@@ -4,16 +4,16 @@
 
 //Can not perform test, key exists
 if (!process.env.SOCKET_SERVICE_URL) {
-	throw new Error('Please set SOCKET_SERVICE_URL environment variable to test cached-behaviour');
-}
-
-//Can not perform test, key exists
-if (!process.env.SIESTA_TEST_KEY) {
-	throw new Error('Please set SIESTA_TEST_KEY for proper testing');
+	console.log('Please set SOCKET_SERVICE_URL environment variable to test cached-behaviour');
+	return;
 }
 
 var ids, newHenk;
-var cbc = require('../index.js');
+var key = process.env.COMMUNIBASE_KEY;
+delete process.env.COMMUNIBASE_KEY;
+var cbc = require('../../index.js');
+process.env.COMMUNIBASE_KEY = key;
+
 var _ = require('lodash');
 var moment = require('moment');
 var assert = require('assert');
@@ -31,7 +31,7 @@ describe('Connector', function () {
 		});
 
 		it('should be able to construct a clone with a different key', function (done) {
-			cbc = cbc.clone(process.env.SIESTA_TEST_KEY);
+			cbc = cbc.clone(process.env.COMMUNIBASE_KEY);
 			cbc.enableCache('51909dece4b02025890fc089', process.env.SOCKET_SERVICE_URL);
 			cbc.getAll('EntityType').then(function () {
 				done();

@@ -4,7 +4,7 @@
 
 var Promise = require('bluebird');
 var fs = require('fs');
-var cbc = require('communibase-connector-js').clone(process.env.COMMUNIBASE_KEY);
+var cbc = require('../../index.js').clone(process.env.COMMUNIBASE_KEY);
 
 module.exports = function () {
 	var personData = JSON.parse(fs.readFileSync(__dirname + '/../fixtures/person.json'));

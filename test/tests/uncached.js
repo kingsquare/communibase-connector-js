@@ -2,14 +2,14 @@
 
 'use strict';
 
-//Can not perform test, key exists
-if (process.env.COMMUNIBASE_KEY) {
-	console.log('Deleting ENV key: tests should be run without one...');
-	delete process.env.COMMUNIBASE_KEY;
-}
 
 var ids, newHenk;
-var cbc = require('../index.js');
+
+var key = process.env.COMMUNIBASE_KEY;
+delete process.env.COMMUNIBASE_KEY;
+var cbc = require('../../index.js');
+process.env.COMMUNIBASE_KEY = key;
+
 var _ = require('lodash');
 var moment = require('moment');
 var assert = require('assert');
@@ -27,7 +27,7 @@ describe('Connector', function () {
 		});
 
 		it('should be able to construct a clone with a different key', function (done) {
-			cbc = cbc.clone(process.env.SIESTA_TEST_KEY);
+			cbc = cbc.clone(process.env.COMMUNIBASE_KEY);
 			cbc.getAll('EntityType').then(function () {
 				done();
 			}, function (err) {
@@ -135,41 +135,44 @@ describe('Connector', function () {
 
 		it('should create a valid person', function (done) {
 			cbc.update('Person', {
+				initials: 'H.',
 				firstName: 'Henk',
+				lastName: 'De Vries',
 				registeredDate: moment().startOf('day').toDate()
 			}).then(function (result) {
 				assert.equal((result._id === undefined), false);
 				newHenk = result;
 				done();
 			}, function (error) {
+				console.log(error);
 				done(error);
 			});
 		});
 	});
 
-	describe('getReadStream', function () {
-		it('should produce a readable stream', function (done) {
-			var stream = cbc.createReadStream('52498dbaf4277fa813000021'), data;
-			stream.on('data', function (chunk) {
-				data += chunk;
-			});
-			stream.on('end', function () {
-				assert.equal(data.length, 478);
-				done();
-			});
-		});
-
-		it('should produce a stream that throws an error if any', function (done) {
-			var stream = cbc.createReadStream('12345'), gotError = false;
-			stream.on('error', function () { //err?
-				gotError = true;
-			});
-			stream.on('end', function () {
-				assert.equal(gotError, true);
-				done();
-			});
-		});
-	});
+	//describe('getReadStream', function () {
+	//	it('should produce a readable stream', function (done) {
+	//		var stream = cbc.createReadStream('52498dbaf4277fa813000021'), data;
+	//		stream.on('data', function (chunk) {
+	//			data += chunk;
+	//		});
+	//		stream.on('end', function () {
+	//			assert.equal(data.length, 478);
+	//			done();
+	//		});
+	//	});
+	//
+	//	it('should produce a stream that throws an error if any', function (done) {
+	//		var stream = cbc.createReadStream('12345'), gotError = false;
+	//		stream.on('error', function () { //err?
+	//			gotError = true;
+	//		});
+	//		stream.on('end', function () {
+	//			assert.equal(gotError, true);
+	//			done();
+	//		});
+	//	});
+	//});
 
 	describe('destroy', function () {
 		it('should delete something e.g. a person', function (done) {
@@ -198,31 +201,31 @@ describe('Connector', function () {
 		});
 	});
 
-	describe('metadata handling', function () {
-		it('works', function (done) {
-			var promise = cbc.search('EntityType', { _id: { $exists: true }}, {
-				limit: 1,
-				includeMetadata: true
-			});
-			promise.then(function () {
-				assert.equal((promise.metadata.total > 1), true);
-				done();
-			});
-		});
-
-		it('does not break on a regular result-object containing a property metadata (e.g. File)', function (done) {
-			cbc.getId('File', { metadata: { $exists: true }}).then(function (fileId) {
-				return cbc.getById('File', fileId).then(function (file) {
-					assert.equal((file === undefined), false);
-					done();
-				}, function (err) {
-					done(err);
-				});
-			}, function (err) {
-				done(err);
-			});
-		});
-	});
+	//describe('metadata handling', function () {
+	//	it('works', function (done) {
+	//		var promise = cbc.search('EntityType', { _id: { $exists: true }}, {
+	//			limit: 1,
+	//			includeMetadata: true
+	//		});
+	//		promise.then(function () {
+	//			assert.equal((promise.metadata.total > 1), true);
+	//			done();
+	//		});
+	//	});
+	//
+	//	it('does not break on a regular result-object containing a property metadata (e.g. File)', function (done) {
+	//		cbc.getId('File', { metadata: { $exists: true }}).then(function (fileId) {
+	//			return cbc.getById('File', fileId).then(function (file) {
+	//				assert.equal((file === undefined), false);
+	//				done();
+	//			}, function (err) {
+	//				done(err);
+	//			});
+	//		}, function (err) {
+	//			done(err);
+	//		});
+	//	});
+	//});
 
 	describe('aggregation', function () {
 		it('works', function (done) {
@@ -242,21 +245,21 @@ describe('Connector', function () {
 	});
 
 	describe('getByRef', function () {
-		it('works with a correct ref', function (done) {
-			cbc.getByRef({
-				rootDocumentId: '524aca8947bd91000600000c',
-				rootDocumentEntityType: 'Person',
-				path: [{
-					field: 'addresses',
-					objectId: '53440792463cda7161000003'
-				}]
-			}).then(function (address) {
-				assert.equal(address.city, 'BEVERWIJK');
-				done();
-			}, function (err) {
-				done(err);
-			});
-		});
+	//	it('works with a correct ref', function (done) {
+	//		cbc.getByRef({
+	//			rootDocumentId: '524aca8947bd91000600000c',
+	//			rootDocumentEntityType: 'Person',
+	//			path: [{
+	//				field: 'addresses',
+	//				objectId: '53440792463cda7161000003'
+	//			}]
+	//		}).then(function (address) {
+	//			assert.equal(address.city, 'BEVERWIJK');
+	//			done();
+	//		}, function (err) {
+	//			done(err);
+	//		});
+	//	});
 
 		it('throws an error with an incorrect ref', function (done) {
 			cbc.getByRef({

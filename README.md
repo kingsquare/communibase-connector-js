@@ -38,7 +38,7 @@ COMMUNIBASE_API_URL=https://api.communibase.nl/0.1/
 API
 ---
 
-The following methods exists, all returning a [promise](https://github.com/cujojs/when/blob/master/docs/api.md#promise) for a result.
+The following methods exists, all returning a [promise](https://github.com/petkaantonov/bluebird/blob/master/API.md#new-promisefunctionfunction-resolve-function-reject-resolver---promise) for a result.
 
 "selectors" may be provided [MongoDb style](http://docs.mongodb.org/manual/reference/method/db.collection.find/#db.collection.find).
 

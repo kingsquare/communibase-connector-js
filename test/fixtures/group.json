@@ -1,0 +1,88 @@
+{
+  "costCentre": "001",
+  "description": "Het Professionaliseringsabonnement kan door leden als toevoeging worden afgesloten.",
+  "endDate": null,
+  "generalLedgerAccountNumber": "8004",
+  "hasMembershipNumbers": true,
+  "interval": 1,
+  "intervalType": "y",
+  "invoiceTariffReductionAsDiscount": true,
+  "periodicTariffLists": [
+	{
+	  "_id": "528cdeef0f996fd02b00000d",
+	  "endOfTariff": null,
+	  "tariffs": [
+		{
+		  "_id": "528cdeed8385c658f400000c",
+		  "applicableForGroupIds": [],
+		  "costCentre": "001",
+		  "generalLedgerAccountNumber": "8110",
+		  "invoiceItemDescription": "Ooa Professionaliseringsabonnement {{dateFormat startDate format='Y'}} - {{personTitle}}",
+		  "price": 195,
+		  "taxPercentage": 21,
+		  "title": "Standaard",
+		  "freeChoiceTariff": false,
+		  "partnerTariff": false,
+		  "type": ""
+		},
+		{
+		  "_id": "52d697de02ca65d9d7000001",
+		  "applicableForGroupIds": [
+			"52fb8a6c679371c41b575fca"
+		  ],
+		  "costCentre": "001",
+		  "generalLedgerAccountNumber": "8110",
+		  "invoiceItemDescription": "Korting prof.abo. voor CMC-leden - {{personTitle}}",
+		  "price": 160,
+		  "taxPercentage": 21,
+		  "title": "Tarief CMC-leden",
+		  "freeChoiceTariff": false,
+		  "partnerTariff": false,
+		  "type": ""
+		},
+		{
+		  "_id": "52d69819dd7eb78559000002",
+		  "applicableForGroupIds": [
+			"528cd85574c193fe07000056"
+		  ],
+		  "costCentre": "001",
+		  "generalLedgerAccountNumber": "8110",
+		  "invoiceItemDescription": "100% korting prof.abo. bestuursleden - {{personTitle}}",
+		  "price": 0,
+		  "taxPercentage": 21,
+		  "title": "Tarief bestuursleden",
+		  "freeChoiceTariff": false,
+		  "partnerTariff": false,
+		  "type": ""
+		}
+	  ]
+	}
+  ],
+  "preferredTypeOfContact": "email",
+  "quantityDiscounts": [],
+  "referenceDate": "2012-12-31T23:00:00.000Z",
+  "registrationFeeTariffLists": [],
+  "rolId": null,
+  "startDate": "2013-11-30T23:00:00.000Z",
+  "supplementaryTariffLists": [],
+  "tariffDecays": [
+	{
+	  "_id": "539ed734ff82c1eae9000001",
+	  "passedPercentage": 50,
+	  "discountPercentage": 25,
+	  "costCentre": "001",
+	  "generalLedgerAccountNumber": "8110"
+	},
+	{
+	  "_id": "539ed73f2fe7c77906000002",
+	  "passedPercentage": 75,
+	  "discountPercentage": 33,
+	  "costCentre": "001",
+	  "generalLedgerAccountNumber": "8110"
+	}
+  ],
+  "title": "Ooa Professionaliseringsabonnement",
+  "type": "subscription",
+  "updatedAt": "2015-05-01T07:07:25.444Z",
+  "updatedBy": "Ebo Bolhuis"
+}

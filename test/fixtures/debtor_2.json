@@ -1,0 +1,42 @@
+{
+  "addressReference": {
+	"documentReference": {
+	  "rootDocumentEntityType": "Person",
+	  "path": [
+		{
+		  "field": "addresses",
+		  "objectId": "528c992ac0913c6f01003975"
+		}
+	  ]
+	},
+	"address": null
+  },
+  "chamberOfCommerceNumber": "",
+  "comment": "",
+  "creditorId": "",
+  "emailAddresses": [
+	{
+	  "emailAddress": "robertjan.uijl@gmail.com",
+	  "comment": "",
+	  "rolId": null,
+	  "type": "private"
+	}
+  ],
+  "endDate": null,
+  "iban": "",
+  "organizationCode": null,
+  "phoneNumbers": [
+	{
+	  "countryCode": "",
+	  "areaCode": "06",
+	  "subscriberNumber": "81462893",
+	  "rolId": null,
+	  "type": "work"
+	}
+  ],
+  "startDate": null,
+  "title": "High Hopes BV",
+  "type": "",
+  "vatNumber": "",
+  "website": ""
+}

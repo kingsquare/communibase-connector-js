@@ -1,0 +1,45 @@
+{
+  "addressReference":
+  { "address":
+	{
+	  "street": "Rijsenburgselaan",
+	  "streetNumber": "19",
+	  "streetNumberAddition": "",
+	  "zipcode": "3972 EH",
+	  "city": "DRIEBERGEN-RIJSENBURG",
+	  "latitude": 52.05277,
+	  "longitude": 5.272115,
+	  "property": "",
+	  "type": "postal",
+	  "countryCode": "NL"
+	}
+  },
+  "chamberOfCommerceNumber": "",
+  "comment": "",
+  "creditorId": "",
+  "emailAddresses": [
+	{
+	  "emailAddress": "robertjan.uijl@gmail.com",
+	  "comment": "",
+	  "rolId": null,
+	  "type": "private"
+	}
+  ],
+  "endDate": null,
+  "iban": "",
+  "organizationCode": null,
+  "phoneNumbers": [
+	{
+	  "countryCode": "",
+	  "areaCode": "06",
+	  "subscriberNumber": "81462893",
+	  "rolId": null,
+	  "type": "work"
+	}
+  ],
+  "startDate": null,
+  "title": "High Hopes BV",
+  "type": "",
+  "vatNumber": "",
+  "website": ""
+}

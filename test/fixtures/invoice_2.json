@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "100002",
+  "address": {
+	"countryCode": "NL",
+	"type": "visit",
+	"street": "Straatje",
+	"streetNumber": "12",
+	"zipcode": "4284VA",
+	"city": "RIJSWIJK NB"
+  },
+  "date": "2013-01-22T23:00:00.000Z",
+  "dayBookNumber": "30",
+  "firstAddressLine": "Testaanhef",
+  "invoiceItems": [
+	{
+	  "pricePerUnit": -100,
+	  "quantity": 2,
+	  "description": "Refund voor niks",
+	  "generalLedgerAccountNumber": "8000",
+	  "costCentre": "001",
+	  "taxPercentage": 0
+	}
+  ],
+  "openAmount": -200,
+  "paymentType": "invoice",
+  "template": "test"
+}

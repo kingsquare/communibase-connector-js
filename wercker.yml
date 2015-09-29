@@ -1,0 +1,15 @@
+box: node:4.1
+services:
+    - mongo:2.6
+build:
+  steps:
+    - add-to-known_hosts:
+        hostname: bitbucket.org
+        local: true
+    - add-to-known_hosts:
+        hostname: github.com
+        local: true
+    - add-ssh-key:
+        keyname: wercker
+    - npm-install
+    - npm-test

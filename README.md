@@ -35,6 +35,12 @@ If you need to connect to a specific version of the endpoint, you may want to se
 COMMUNIBASE_API_URL=https://api.communibase.nl/0.1/
 ```
 
+### Use via a tunnel requires also adding an extra Host header
+
+```bash
+COMMUNIBASE_API_URL=https://17.42.0.1:8888/0.1/ COMMUNIBASE_API_HOST=api.communibase.nl node script.js
+```
+
 API
 ---
 
@@ -127,7 +133,7 @@ Alternatively, you can search the entire history of documents to look for specif
 ```js
 //Lookup all versions of any person (even deleted documents) ever with first name Tim.
 
-cbc.historySearch('Person', { firstName: 'Tim' }): Promise for VersionInformation[] 
+cbc.historySearch('Person', { firstName: 'Tim' }): Promise for VersionInformation[]
 ```
 
 VersionInformation has the following structure
@@ -135,9 +141,9 @@ VersionInformation has the following structure
 * refId - The _id of the original document. You can use this at the regular CRUD endpoint
 * updatedAt - The date this version was created
 * updatedBy - A human readable description describing who created it
- 
+
 With an _id and a refId, we can lookup that specific version via the API
- 
+
 ```js
 cbc.getById(entityType, id, params, versionId) : Promise for version of document;
 ```

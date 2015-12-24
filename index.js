@@ -79,6 +79,9 @@ var Connector = function (key) {
 		if (!task.options.headers) {
 			task.options.headers = {};
 		}
+		if (process.env.COMMUNIBASE_API_HOST) {
+			task.options.headers['Host'] = process.env.COMMUNIBASE_API_HOST;
+		}
 		task.options.headers['x-api-key'] = self.key;
 		restler[task.method](task.url, task.options).on('success', success).on('fail', fail).on('error', fail);
 	}, 8);

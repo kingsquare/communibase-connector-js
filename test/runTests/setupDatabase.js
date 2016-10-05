@@ -10,7 +10,7 @@ var Db = mongodb.Db;
 var Server = mongodb.Server;
 var url = require('url');
 var fs = require('fs');
-var cbc = require('../../index.js');
+var winston = require('winston');
 
 function getDropDbPromise(uri) {
 	var parsedUrl = url.parse(uri);
@@ -80,7 +80,7 @@ module.exports = function() {
 		getDropDbPromise(process.env.MASTER_DB_URI),
 		getDropDbPromise(process.env.TEST_ADMINISTRATION_DB_URI)
 	]).then(function () {
-		console.log('Saving new master key');
+		winston.debug('Saving new master key');
 
 		return Promise.promisifyAll(adminMongooseConnection.models.ApiKey.collection).insertAsync({
 			"administrationId": process.env.MASTER_ADMINISTRATION_ID,
@@ -91,7 +91,7 @@ module.exports = function() {
 			"propertyAccessDescriptions": []
 		});
 	}).then(function () {
-		console.log('Saving new adminisitration');
+		winston.debug('Saving new adminisitration');
 
 		return adminMongooseConnection.models.Administration.create({
 			"title": 'Unittest administration',
@@ -102,7 +102,7 @@ module.exports = function() {
 			return Promise.resolve(administration._id);
 		});
 	}).then(function (administrationId) {
-		console.log('Saving new administration key!');
+		winston.debug('Saving new administration key!');
 		return adminMongooseConnection.models.ApiKey.create({
 			"administrationId": administrationId,
 			"key": process.env.COMMUNIBASE_KEY,
@@ -114,7 +114,7 @@ module.exports = function() {
 	}).then(function () {
 		adminMongooseConnection.close();
 	}).then(function () {
-		console.log('Inserting administration entitytypes...');
+		winston.debug('Inserting administration entitytypes...');
 		return importBsonEntityTypes(__dirname +
 			'/../../node_modules/Communibase/test/resources/dump/blueprint/EntityType.bson',
 			process.env.TEST_ADMINISTRATION_DB_URI);

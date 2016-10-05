@@ -7,14 +7,13 @@ describe('Async connectors', function (done) {
 
 	try {
 		privateApiKeysWithGroupIds = JSON.parse(fs.readFileSync('./privateApiKeysWithGroupIds.json'));
-
 	} catch (e) {
 		console.log('** privateApiKeysWithGroupIds.json not found, skipping test **');
 		return;
 	}
 
-	var cbc = require('../index.js');
 	it('should work with multiple connectors in multiple administratations', function (done) {
+		var cbc = require('../index.js');
 		var promises = [], cbcs = {};
 
 		_.each(privateApiKeysWithGroupIds, function (groupId, apiKey) {

@@ -5,11 +5,7 @@
 
 var ids, newHenk;
 
-var key = process.env.COMMUNIBASE_KEY;
-delete process.env.COMMUNIBASE_KEY;
-var cbc = require('../../index.js');
-process.env.COMMUNIBASE_KEY = key;
-
+var cbc = require('../../index.js').clone(null);
 var _ = require('lodash');
 var moment = require('moment');
 var assert = require('assert');
@@ -18,9 +14,10 @@ var Promise = require('bluebird');
 describe('Connector', function () {
 	this.timeout(10000);
 	describe('key handling', function () {
-		it('should throw errors when no key is configured', function (done) {
-			cbc.getAll('EntityType').then(function () {
-				done(new Error('Got response without configured key'));
+		it('should throw errors when no proper key is configured', function (done) {
+			cbc.getAll('EntityType').then(function (res) {
+				console.log(res);
+				done(new Error('Got response with improper key'));
 			}, function () {
 				done();
 			});

@@ -9,6 +9,7 @@ var cbc = require('../../index.js').clone(null);
 var _ = require('lodash');
 var moment = require('moment');
 var assert = require('assert');
+var fs = require('fs');
 var Promise = require('bluebird');
 
 describe('Connector', function () {
@@ -182,17 +183,30 @@ describe('Connector', function () {
 	});
 
 	describe('queue handling', function () {
-		it('should handle/queue a lot of requests properly', function (done) {
+		it('should handle/queue a lot of search requests properly', function (done) {
 			var  promise, resultPromises = [], assertEqual = function (result) {
 				assert.equal(result.length, 1);
 			};
-			for (var i = 0; i < 100; i += 1) {
+			for (var i = 0; i < 500; i += 1) {
 				promise = cbc.search('EntityType', { "_id": ids[0] }).then(assertEqual);
 				resultPromises.push(promise);
 			}
 
 			Promise.all(resultPromises).then(function (result) {
-				assert.equal(result.length, 100);
+				assert.equal(result.length, 500);
+				done();
+			});
+		});
+
+		it('should handle/queue a lot of update requests properly', function (done) {
+			const personData = JSON.parse(fs.readFileSync(__dirname + '/../fixtures/person.json'));
+			const resultPromises = [];
+			for (var i = 0; i < 500; i += 1) {
+				resultPromises.push(cbc.update('Person', personData));
+			}
+
+			Promise.all(resultPromises).then(function (result) {
+				assert.equal(result.length, 500);
 				done();
 			});
 		});

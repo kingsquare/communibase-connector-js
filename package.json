@@ -4,7 +4,7 @@
   "version": "0.4.3",
   "dependencies": {
     "async": "^0.9.0",
-    "bluebird": "^2.9.14",
+    "bluebird": "3.4.6",
     "lodash": "^3.5.0",
     "lru-cache": "^2.5.0",
     "restler": "^3.2.2",
@@ -14,7 +14,7 @@
     "babel-core": "^6.17.0",
     "bson-stream": "0.0.6",
     "communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
-    "mocha": "^2.2.1",
+    "mocha": "3.1.0",
     "moment": "^2.9.0",
     "mongodb": "^2.0.44"
   },

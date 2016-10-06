@@ -16,7 +16,8 @@
     "communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
     "mocha": "3.1.0",
     "moment": "^2.9.0",
-    "mongodb": "^2.0.44"
+    "mongodb": "^2.0.44",
+    "winston": "^2.2.0"
   },
   "repository": {
     "type": "git",

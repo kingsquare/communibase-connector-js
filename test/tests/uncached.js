@@ -13,7 +13,7 @@ var fs = require('fs');
 var Promise = require('bluebird');
 
 describe('Connector', function () {
-	this.timeout(10000);
+	this.timeout(30000);
 	describe('key handling', function () {
 		it('should throw errors when no proper key is configured', function (done) {
 			cbc.getAll('EntityType').then(function (res) {

@@ -52,6 +52,7 @@ var Connector = function (key) {
 			}
 			task.deferred.reject(error);
 			callback();
+			return null;
 		}
 
 		if (!self.key && !self.token) {
@@ -95,7 +96,7 @@ var Connector = function (key) {
 				}
 				deferred.resolve(records);
 				callback();
-				return;
+				return null;
 			}
 			throw result;
 		}).catch(fail);

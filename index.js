@@ -1,7 +1,5 @@
 'use strict';
 
-var restler = require('restler');
-var _ = require('lodash');
 var async = require('async');
 var http = require('http');
 var https = require('https');
@@ -9,6 +7,7 @@ var stream = require('stream');
 var io = require('socket.io-client');
 var LRU = require("lru-cache");
 var Promise = require('bluebird');
+var fetch = require(typeof window === 'undefined' ? 'node-fetch' : 'fetch');
 
 function defer() {
 	var resolve, reject;
@@ -44,30 +43,19 @@ var Connector = function (key) {
 	this.getByIdQueue = {};
 	this.getByIdPrimed = false;
 	this.key = key;
+	this.token = '';
 	this.setServiceUrl(process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/');
 	this.queue = async.queue(function (task, callback) {
-		var success = function (result) {
-			var deferred = task.deferred;
-			if (result.metadata && result.records) {
-				deferred.promise.metadata = result.metadata;
-				deferred.resolve(result.records);
-				callback();
-				return;
-			}
-			deferred.resolve(result);
-			callback();
-		};
-
-		var fail = function (error) {
+		function fail(error) {
 			if (!(error instanceof Error)) {
 				error = new CommunibaseError(error, task);
 			}
 			task.deferred.reject(error);
 			callback();
-		};
+		}
 
-		if (!self.key) {
-			fail(new Error('Missing key for Communibase Connector: please set COMMUNIBASE_KEY environment' +
+		if (!self.key && !self.token) {
+			fail(new Error('Missing key or token for Communibase Connector: please set COMMUNIBASE_KEY environment' +
 			' variable, or spawn a new instance using require(\'communibase-connector-js\').clone(\'<' +
 			'your api key>\')'));
 			return;
@@ -77,13 +65,40 @@ var Connector = function (key) {
 			task.options = {};
 		}
 		if (!task.options.headers) {
-			task.options.headers = {};
+			task.options.headers = {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			};
 		}
 		if (process.env.COMMUNIBASE_API_HOST) {
 			task.options.headers['Host'] = process.env.COMMUNIBASE_API_HOST;
 		}
-		task.options.headers['x-api-key'] = self.key;
-		restler[task.method](task.url, task.options).on('success', success).on('fail', fail).on('error', fail);
+
+		if (self.key) {
+			task.options.headers['x-api-key'] = self.key;
+		}
+		if (self.token) {
+			task.options.headers['x-access-token'] = self.token
+		}
+
+		let success = false;
+		return Promise.resolve(fetch(task.url, task.options)).then(response => {
+			success = (response.status === 200);
+			return response.json();
+		}).then(result => {
+			if (success) {
+				let deferred = task.deferred;
+				let records = result;
+				if (result.metadata && result.records) {
+					deferred.promise.metadata = result.metadata;
+					records = result.records;
+				}
+				deferred.resolve(records);
+				callback();
+				return;
+			}
+			throw result;
+		}).catch(fail);
 	}, 8);
 };
 
@@ -105,13 +120,10 @@ Connector.prototype._search = function (objectType, selector, params) {
 	var deferred = defer();
 	this.queue.push({
 		deferred: deferred,
-		method: 'post',
 		url: this.serviceUrl + objectType + '.json/search',
 		options: {
-			headers: {
-				'content-type': 'application/json'
-			},
-			data: JSON.stringify(selector),
+			method: 'POST',
+			body: JSON.stringify(selector),
 			query: params
 		}
 	});
@@ -134,13 +146,18 @@ Connector.prototype._getByIds = function (objectType, objectIds, params) {
  */
 Connector.prototype.spoolQueue = function () {
 	var self = this;
-	_.each(this.getByIdQueue, function (deferredsById, objectType) {
-		var objectIds = _.keys(deferredsById);
+	Object.keys(this.getByIdQueue).forEach(objectType => {
+		const deferredsById = this.getByIdQueue[objectType];
+		const objectIds = Object.keys(deferredsById);
+
 		self.getByIdQueue[objectType] = {};
 		self._getByIds(objectType, objectIds).then(
 			function (objects) {
-				var objectHash = _.indexBy(objects, '_id');
-				_.each(objectIds, function (objectId) {
+				var objectHash = objects.reduce((previousValue, object) => {
+					previousValue[object._id] = object;
+					return previousValue;
+				}, {});
+				objectIds.forEach(objectId => {
 					if (objectHash[objectId]) {
 						deferredsById[objectId].resolve(objectHash[objectId]);
 						return;
@@ -149,7 +166,7 @@ Connector.prototype.spoolQueue = function () {
 				});
 			},
 			function (err) {
-				_.each(objectIds, function (objectId) {
+				objectIds.forEach(objectId => {
 					deferredsById[objectId].reject(err);
 				});
 			}
@@ -168,7 +185,7 @@ Connector.prototype.spoolQueue = function () {
  * @returns {Promise} - for object: a key/value object with object data
  */
 Connector.prototype.getById = function (objectType, objectId, params, versionId) {
-	if (!_.isString(objectId)) {
+	if (typeof objectId !== "string" || objectId.length !== 24) {
 		return Promise.reject(new Error('Invalid objectId'));
 	}
 
@@ -177,11 +194,11 @@ Connector.prototype.getById = function (objectType, objectId, params, versionId)
 		var deferred = defer();
 		this.queue.push({
 			deferred: deferred,
-			method: 'get',
 			url: this.serviceUrl + objectType + '.json/' + (versionId ?
 					'history/' + objectId + '/' + versionId :
 					'crud/' + objectId),
 			options: {
+				method: 'GET',
 				query: params
 			}
 		});
@@ -282,9 +299,9 @@ Connector.prototype.getAll = function (objectType, params) {
 	var deferred = defer();
 	this.queue.push({
 		deferred: deferred,
-		method: 'get',
 		url: this.serviceUrl + objectType + '.json/crud',
 		options: {
+			method: 'GET',
 			query: params
 		}
 	});
@@ -313,9 +330,7 @@ Connector.prototype.getIds = function (objectType, selector, params) {
 		}
 	}
 
-	result = this.search(objectType, selector, _.extend({ fields: '_id' }, params)).then(function (result) {
-		return _.pluck(result, '_id');
-	});
+	result = this.search(objectType, selector, Object.assign({ fields: '_id' }, params)).then(results => results.map(result => result._id));
 
 	if (this.cache) {
 		return result.then(function (ids) {
@@ -355,11 +370,11 @@ Connector.prototype.search = function (objectType, selector, params) {
 		});
 	}
 
-	if (_.isEmpty(selector)) {
-		return this.getAll(objectType, params);
+	if (selector && (typeof selector === 'object') && Object.keys(selector).length) {
+		return this._search(objectType, selector, params);
 	}
 
-	return this._search(objectType, selector, params);
+	return this.getAll(objectType, params);
 };
 
 /**
@@ -370,7 +385,7 @@ Connector.prototype.search = function (objectType, selector, params) {
  * @returns promise for object (the created or updated object)
  */
 Connector.prototype.update = function (objectType, object) {
-	var deferred = defer(), operation = ((object._id && (object._id.length > 0)) ? 'put' : 'post');
+	var deferred = defer(), operation = ((object._id && (object._id.length > 0)) ? 'PUT' : 'POST');
 
 	if (object._id && this.cache && this.cache.objectCache && this.cache.objectCache[objectType] &&
 			this.cache.objectCache[objectType][object._id])  {
@@ -379,13 +394,10 @@ Connector.prototype.update = function (objectType, object) {
 
 	this.queue.push({
 		deferred: deferred,
-		method: operation,
 		url: this.serviceUrl + objectType + '.json/crud' + ((operation === 'put') ? '/' + object._id  : ''),
 		options: {
-			headers: {
-				'content-type': 'application/json'
-			},
-			data: JSON.stringify(object)
+			method: operation,
+			body: JSON.stringify(object)
 		}
 	});
 
@@ -409,8 +421,10 @@ Connector.prototype.destroy = function (objectType, objectId) {
 
 	this.queue.push({
 		deferred: deferred,
-		method: 'del',
-		url: this.serviceUrl + objectType + '.json/crud/' + objectId
+		url: this.serviceUrl + objectType + '.json/crud/' + objectId,
+		options: {
+			method: 'DELETE'
+		}
 	});
 
 	return deferred.promise;
@@ -428,8 +442,10 @@ Connector.prototype.undelete = function (objectType, objectId) {
 
 	this.queue.push({
 		deferred: deferred,
-		method: 'post',
-		url: this.serviceUrl + objectType + '.json/history/undelete/' + objectId
+		url: this.serviceUrl + objectType + '.json/history/undelete/' + objectId,
+		options: {
+			method: 'POST'
+		}
 	});
 
 	return deferred.promise;
@@ -488,8 +504,10 @@ Connector.prototype.getHistory = function (objectType, objectId) {
 	var deferred = defer();
 	this.queue.push({
 		deferred: deferred,
-		method: 'get',
-		url: this.serviceUrl + objectType + '.json/history/' + objectId
+		url: this.serviceUrl + objectType + '.json/history/' + objectId,
+		options: {
+			method: 'GET'
+		}
 	});
 	return deferred.promise;
 };
@@ -504,13 +522,10 @@ Connector.prototype.historySearch = function (objectType, selector) {
 	var deferred = defer();
 	this.queue.push({
 		deferred: deferred,
-		method: 'post',
 		url: this.serviceUrl + objectType + '.json/history/search',
 		options: {
-			headers: {
-				'content-type': 'application/json'
-			},
-			data: JSON.stringify(selector)
+			method: 'POST',
+			body: JSON.stringify(selector)
 		}
 	});
 	return deferred.promise;
@@ -552,9 +567,9 @@ Connector.prototype.getByRef = function (ref, parentDocument) {
 	}
 
 	return parentDocumentPromise.then(function (result) {
-		_.some(ref.path, function (pathNibble) {
+		ref.path.some(function (pathNibble) {
 			if (result[pathNibble.field]) {
-				if (!_.some(result[pathNibble.field], function (subDocument) {
+				if (!result[pathNibble.field].some(function (subDocument) {
 					if (subDocument._id === pathNibble.objectId) {
 						result = subDocument;
 						return true;
@@ -589,7 +604,7 @@ Connector.prototype.getByRef = function (ref, parentDocument) {
  * ]
  */
 Connector.prototype.aggregate = function (objectType, aggregationPipeline) {
-	if (!_.isArray(aggregationPipeline) || aggregationPipeline.length === 0)  {
+	if (!aggregationPipeline || !aggregationPipeline.length)  {
 		return Promise.reject(new Error('Please provide a valid Aggregation Pipeline.'));
 	}
 
@@ -608,13 +623,10 @@ Connector.prototype.aggregate = function (objectType, aggregationPipeline) {
 	var deferred = defer();
 	this.queue.push({
 		deferred: deferred,
-		method: 'post',
 		url: this.serviceUrl + objectType + '.json/aggregate',
 		options: {
-			headers: {
-				'content-type': 'application/json'
-			},
-			data: JSON.stringify(aggregationPipeline)
+			method: 'POST',
+			body: JSON.stringify(aggregationPipeline)
 		}
 	});
 
@@ -640,12 +652,9 @@ Connector.prototype.finalizeInvoice = function(invoiceId) {
 	var deferred = defer();
 	this.queue.push({
 		deferred: deferred,
-		method: 'post',
 		url: this.serviceUrl + 'Invoice.json/finalize/' + invoiceId,
 		options: {
-			headers: {
-				'content-type': 'application/json'
-			}
+			method: 'POST',
 		}
 	});
 	return deferred.promise;

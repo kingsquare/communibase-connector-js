@@ -1,5 +1,6 @@
 'use strict';
 
+require('isomorphic-fetch');
 var async = require('async');
 var http = require('http');
 var https = require('https');
@@ -7,7 +8,6 @@ var stream = require('stream');
 var io = require('socket.io-client');
 var LRU = require("lru-cache");
 var Promise = require('bluebird');
-var fetch = require(typeof window === 'undefined' ? 'node-fetch' : 'fetch');
 
 function defer() {
 	var resolve, reject;

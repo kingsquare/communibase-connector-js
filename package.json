@@ -1,13 +1,12 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "dependencies": {
     "async": "2.1.1",
     "bluebird": "3.4.6",
-    "fetch": "1.1.0",
+    "isomorphic-fetch": "2.2.1",
     "lru-cache": "4.0.1",
-    "node-fetch": "1.6.3",
     "socket.io-client": "^1.3.5"
   },
   "devDependencies": {

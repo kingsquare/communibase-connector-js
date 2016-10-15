@@ -264,18 +264,16 @@ Connector.prototype.getByIds = function (objectType, objectIds, params) {
 		return this._getByIds(objectType, objectIds, params);
 	}
 
-	var promises = [], self = this;
-	objectIds.forEach(function (objectId) {
-		promises.push(self.getById(objectType, objectId, params));
-	});
-	return Promise.reflect(promises).then(function (descriptors) {
+	return Promise.all(
+		objectIds.map(objectId => this.getById(objectType, objectId, params).reflect())
+	).then((inspections) => {
 		var result = [], error = null;
-		descriptors.forEach(function (descriptor) {
-			if (descriptor.isRejected()) {
-				error = descriptor.reason();
+		inspections.forEach(function (inspection) {
+			if (inspection.isRejected()) {
+				error = inspection.reason();
 				return;
 			}
-			result.push(descriptor.value());
+			result.push(inspection.value());
 		});
 		if (result.length) {
 			return result;

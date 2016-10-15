@@ -268,7 +268,7 @@ Connector.prototype.getByIds = function (objectType, objectIds, params) {
 	objectIds.forEach(function (objectId) {
 		promises.push(self.getById(objectType, objectId, params));
 	});
-	return Promise.settle(promises).then(function (descriptors) {
+	return Promise.reflect(promises).then(function (descriptors) {
 		var result = [], error = null;
 		descriptors.forEach(function (descriptor) {
 			if (descriptor.isRejected()) {

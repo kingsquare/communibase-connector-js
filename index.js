@@ -81,6 +81,11 @@ var Connector = function (key) {
 		if (self.token) {
 			task.options.headers['x-access-token'] = self.token
 		}
+		// not support by fetch spec / whatwg-fetch
+		if (task.options.query) {
+			task.url += '?' + Object.keys(task.options.query).map(queryVar => (encodeURIComponent(queryVar) + "=" + encodeURIComponent(task.options.query[queryVar]))).join('&');
+			task.options.query = undefined;
+		}
 
 		let success = false;
 		return Promise.resolve(fetch(task.url, task.options)).then(response => {

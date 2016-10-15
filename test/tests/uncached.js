@@ -288,4 +288,22 @@ describe('Connector', function () {
 			});
 		});
 	});
+
+	describe('search', function () {
+		it('should only provide selected fields if requested', function (done) {
+			cbc.search({
+				firstName: 'Henk'
+			}, {
+				fields: 'lastName'
+			}).then(function (henkies) {
+				console.log(henkies);
+				assert.equal(typeof henkies[0]._id, 'string');
+				assert.equal(typeof henkies[0].lastName, 'string');
+				assert.equal(Object.keys(henkies[0]), 2);
+				done(new Error('Should not find something'));
+			}, function (/*err*/) {
+				done();
+			});
+		});
+	});
 });

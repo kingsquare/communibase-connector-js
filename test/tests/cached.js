@@ -12,7 +12,7 @@ if (!process.env.SOCKET_SERVICE_URL) {
 	var ids, newHenk;
 	var key = process.env.COMMUNIBASE_KEY;
 	delete process.env.COMMUNIBASE_KEY;
-	var cbc = require('../../index.js');
+	var cbc = require('../../src/index.js');
 	process.env.COMMUNIBASE_KEY = key;
 
 	describe('Connector', function () {

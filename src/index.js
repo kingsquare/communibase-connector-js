@@ -398,7 +398,7 @@ Connector.prototype.update = function (objectType, object) {
 
 	this.queue.push({
 		deferred: deferred,
-		url: this.serviceUrl + objectType + '.json/crud' + ((operation === 'put') ? '/' + object._id  : ''),
+		url: this.serviceUrl + objectType + '.json/crud' + ((operation === 'PUT') ? '/' + object._id  : ''),
 		options: {
 			method: operation,
 			body: JSON.stringify(object)

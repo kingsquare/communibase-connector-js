@@ -13,7 +13,7 @@ describe('Async connectors', function (done) {
 	}
 
 	it('should work with multiple connectors in multiple administratations', function (done) {
-		var cbc = require('../index.js');
+		var cbc = require('../src/index.js');
 		var promises = [], cbcs = {};
 
 		_.each(privateApiKeysWithGroupIds, function (groupId, apiKey) {

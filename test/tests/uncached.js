@@ -5,7 +5,7 @@
 
 var ids, newHenk;
 
-var cbc = require('../../index.js').clone(null);
+var cbc = require('../../src/index.js').clone(null);
 var _ = require('lodash');
 var moment = require('moment');
 var assert = require('assert');
@@ -139,6 +139,19 @@ describe('Connector', function () {
 				registeredDate: moment().startOf('day').toDate()
 			}).then(function (result) {
 				assert.equal((result._id === undefined), false);
+				newHenk = result;
+				done();
+			}, function (error) {
+				console.log(error);
+				done(error);
+			});
+		});
+
+
+		it('should update a valid person when it has an _id', function (done) {
+			newHenk.middlename = 'Penk';
+			cbc.update('Person', newHenk).then(function (result) {
+				assert.equal(newHenk._id, result._id);
 				newHenk = result;
 				done();
 			}, function (error) {

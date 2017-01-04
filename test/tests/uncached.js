@@ -1,12 +1,7 @@
 /*global describe: false, it: false */
 
-'use strict';
-
-
 var ids, newHenk;
-
 var cbc = require('../../src/index.js').clone(null);
-var _ = require('lodash');
 var moment = require('moment');
 var assert = require('assert');
 var fs = require('fs');
@@ -51,7 +46,7 @@ describe('Connector', function () {
 				done(new Error('Should not store invalid document'));
 			}, function (err) {
 				assert.equal(err instanceof Error, true);
-				assert.equal(_.size(err.errors) > 0, true);
+				assert.equal(Object.keys(err.errors).length > 0, true);
 				done();
 			});
 		});

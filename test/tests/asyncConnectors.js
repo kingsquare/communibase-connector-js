@@ -1,5 +1,4 @@
 var fs = require('fs');
-var _ = require('lodash');
 var Promise = require('bluebird');
 
 describe('Async connectors', function (done) {
@@ -16,12 +15,12 @@ describe('Async connectors', function (done) {
 		var cbc = require('../src/index.js');
 		var promises = [], cbcs = {};
 
-		_.each(privateApiKeysWithGroupIds, function (groupId, apiKey) {
+		Object.keys(privateApiKeysWithGroupIds).forEach(function (apiKey) {
 			cbcs[apiKey] = cbc.clone(apiKey);
-			promises.push(cbcs[apiKey].getById('Group', groupId));
+			promises.push(cbcs[apiKey].getById('Group', privateApiKeysWithGroupIds[groupId]));
 		});
-		_.each(privateApiKeysWithGroupIds, function (groupId, apiKey) {
-			promises.push(cbcs[apiKey].getById('Group', groupId));
+		Object.keys(privateApiKeysWithGroupIds).forEach(function (apiKey) {
+			promises.push(cbcs[apiKey].getById('Group', privateApiKeysWithGroupIds[groupId]));
 		});
 
 		Promise.all(promises).then(function () {

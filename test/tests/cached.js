@@ -1,6 +1,3 @@
-'use strict';
-
-const  _ = require('lodash');
 const moment = require('moment');
 const assert = require('assert');
 const Promise = require('bluebird');
@@ -54,7 +51,7 @@ if (!process.env.SOCKET_SERVICE_URL) {
 					done(new Error('Should not store invalid document'));
 				}, function (err) {
 					assert.equal(err instanceof Error, true);
-					assert.equal(_.size(err.errors) > 0, true);
+					assert.equal(Object.keys(err.errors).length > 0, true);
 					done();
 				});
 			});

@@ -112,6 +112,9 @@ var Connector = function (key) {
 //Connector.prototype.serviceUrlIsHttps;
 
 Connector.prototype.setServiceUrl = function (newServiceUrl) {
+	if (!newServiceUrl) {
+		throw new Error('Cannot set empty service-url');
+	}
 	this.serviceUrl = newServiceUrl;
 	this.serviceUrlIsHttps = (newServiceUrl.indexOf('https') === 0);
 };

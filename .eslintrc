@@ -1,0 +1,10 @@
+{
+	"extends": "kingsquare",
+	"env": {
+		"browser": true,
+		"node": true
+	},
+  "rules": {
+    "jsx-a11y/img-has-alt": [0]
+  }
+}

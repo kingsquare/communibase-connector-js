@@ -340,6 +340,7 @@ Connector.prototype.getIds = function (objectType, selector, params) {
 	result = this.search(objectType, selector, Object.assign({ fields: '_id' }, params)).then(results => results.map(result => result._id));
 
 	if (this.cache) {
+		var self = this;
 		return result.then(function (ids) {
 			self.cache.getIdsCaches[objectType].set(hash, ids);
 			return ids;

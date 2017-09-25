@@ -477,6 +477,9 @@ Connector.prototype.createReadStream = function (fileId) {
 		fileStream.emit('error', new Error(http.STATUS_CODES[res.statusCode]));
 		fileStream.emit('end');
 	});
+	if (process.env.COMMUNIBASE_API_HOST) {
+		req.setHeader('Host', process.env.COMMUNIBASE_API_HOST);
+	}
 	req.end();
 	req.on('error', function (err) {
 		fileStream.emit('error', err);

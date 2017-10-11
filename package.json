@@ -1,13 +1,14 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "0.5.14",
+  "version": "0.5.15",
   "dependencies": {
     "async": "^2.1.4",
     "bluebird": "^3.4.7",
     "isomorphic-fetch": "^2.2.1",
     "lru-cache": "^4.0.2",
-    "socket.io-client": "^2.0.2"
+    "socket.io-client": "^2.0.2",
+    "mongodb": "^2.2.31"
   },
   "devDependencies": {
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",

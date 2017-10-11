@@ -8,6 +8,7 @@ var stream = require('stream');
 var io = require('socket.io-client');
 var LRU = require("lru-cache");
 var Promise = require('bluebird');
+var ObjectID = require('mongodb').ObjectID;
 
 function defer() {
 	var resolve, reject;
@@ -701,6 +702,10 @@ Connector.prototype.enableCache = function (communibaseAdministrationId, socketS
 			self.cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
 		}
 	});
+};
+
+Connector.prototype.isValidId = function isValidId(id) {
+	return ObjectID.isValid(id);
 };
 
 Connector.prototype.Error = CommunibaseError;

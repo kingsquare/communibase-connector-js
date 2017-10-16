@@ -3,5 +3,15 @@
 	"node": true,
 
 	"indent": 4,
-	"maxlen": 120
+	"maxlen": 120,
+
+	"esnext": true,
+	"-W069": true,
+	"-W101": true,
+	"-W033": true,
+	"globals": {
+		"process": false,
+		"fetch": false,
+		"FormData": false
+	}
 }

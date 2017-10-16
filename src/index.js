@@ -1,6 +1,8 @@
 'use strict';
 
 require('isomorphic-fetch');
+require('isomorphic-form-data');
+
 var async = require('async');
 var http = require('http');
 var https = require('https');
@@ -8,6 +10,9 @@ var stream = require('stream');
 var io = require('socket.io-client');
 var LRU = require("lru-cache");
 var Promise = require('bluebird');
+var moment = require('moment');
+
+var util = require('./util');
 
 function defer() {
 	var resolve, reject;
@@ -486,6 +491,59 @@ Connector.prototype.createReadStream = function (fileId) {
 		fileStream.emit('error', err);
 	});
 	return fileStream;
+};
+
+/**
+ * Uploads the contents of the resource to Communibase (updates or creates a new File)
+ *
+ * Note `File` is not versioned
+ *
+ * @param {Stream|Buffer|String} resource a stream, buffer or a content-string
+ * @param {String} name The binary name (i.e. a filename)
+ * @param {String} destinationPath The "directory location" (sic)
+ * @param {String} id The `File` id to replace the contents of (optional; if not set then creates a new File)
+ *
+ * @returns {Promise}
+ */
+Connector.prototype.updateBinary = function updateBinary(resource, name, destinationPath, id) {
+    var metaData = {
+        path: destinationPath
+    };
+
+    return util.getResourceBufferPromise(resource).then((buffer) => {
+        if (id) { // TODO check is valid id? entails extra dependency (mongodb.ObjectID)
+            // update File identified by id
+            return this.update('File', {
+                _id: id,
+                filename: name,
+                length: buffer.length,
+                uploadDate: moment().format(),
+                metadata: metaData,
+                content: buffer,
+            });
+        }
+
+        // create a new File
+        var deferred = defer();
+
+        var formData = new FormData();
+
+        formData.append('File', buffer, name);
+        formData.append('metadata', new Buffer(JSON.stringify(metaData)));
+
+        this.queue.push({
+            deferred: deferred,
+            url: this.serviceUrl + 'File.json/binary',
+            options: {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }
+        });
+        return deferred.promise;
+    });
 };
 
 /**

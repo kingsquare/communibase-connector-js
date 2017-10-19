@@ -1,3 +1,5 @@
+[![Communibase](https://www.communibase.nl/img/siteLogo.png)](https://www.communibase.nl)
+
 [![Known Vulnerabilities](https://snyk.io/test/github/kingsquare/communibase-connector-js/badge.svg)](https://snyk.io/test/github/kingsquare/communibase-connector-js)
 
 A general-purpose Communibase client for node.js projects. It is primarily a Singleton connector doing REST-calls on the Communibase API using a queuing system. It returns [A+ promises](https://github.com/promises-aplus/promises-spec) for Communibase responses. Behaviour is reflected by a PHP-version that can be found at [Github](https://github.com/kingsquare/communibase-connector-js).

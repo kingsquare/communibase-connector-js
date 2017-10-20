@@ -35,6 +35,6 @@
   },
   "scripts": {
     "build": "babel ./src -d ./lib",
-    "test": "mocha --require babel-register  --delay"
+    "test": "mocha --require babel-register --delay --exit"
   }
 }

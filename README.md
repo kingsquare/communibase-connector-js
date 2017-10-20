@@ -115,7 +115,7 @@ The ```update```-Promise may be rejected if an entity is not considered valid. T
 File handling
 --
 
-upload a new file or update an exiting one:
+upload a new file or update an existing one:
 
 ```js
 /**

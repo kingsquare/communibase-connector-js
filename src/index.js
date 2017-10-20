@@ -531,7 +531,7 @@ Connector.prototype.updateBinary = function updateBinary(resource, name, destina
     // @see https://developer.mozilla.org/en-US/docs/Web/API/FormData/append
     // officially, formdata may contain blobs or strings. node doesn't do blobs, but when polymorphing in a browser we
     // may cast it to one for it to work properly...
-    if (window && window.Blob) {
+    if (typeof window !== 'undefined' && window.Blob) {
       buffer = new Blob([buffer]);
     }
 

@@ -6,17 +6,17 @@
  * @returns {Promise}
  */
 module.exports.streamPromise = stream => new Promise((resolve, reject) => {
-    const buffer = [];
-    stream.on('data', (data) => {
-        buffer.push(data);
-    });
-    stream.on('end', () => {
-        console.log('end');
-        resolve(Buffer.concat(buffer));
-    });
-    stream.on('error', (err) => {
-        reject(err);
-    });
+  const buffer = [];
+  stream.on('data', (data) => {
+    buffer.push(data);
+  });
+  stream.on('end', () => {
+    console.log('end');
+    resolve(Buffer.concat(buffer));
+  });
+  stream.on('error', (err) => {
+    reject(err);
+  });
 });
 
 /**
@@ -27,16 +27,16 @@ module.exports.streamPromise = stream => new Promise((resolve, reject) => {
  * @returns {Promise}
  */
 module.exports.getResourceBufferPromise = function (resource) {
-    // might be a string
-    if (typeof resource === 'string') {
-        resource = new Buffer(resource);
-        // fallthrough
-    }
-    // might already be a Buffer
-    if (resource instanceof Buffer) {
-        return Promise.resolve(resource);
-    }
-    // probably a stream
-    // TODO npe/type check
-    return this.streamPromise(resource);
+  // might be a string
+  if (typeof resource === 'string') {
+    resource = new Buffer(resource);
+    // fallthrough
+  }
+  // might already be a Buffer
+  if (resource instanceof Buffer) {
+    return Promise.resolve(resource);
+  }
+  // probably a stream
+  // TODO npe/type check
+  return this.streamPromise(resource);
 };

@@ -110,7 +110,7 @@ module.exports = function () {
     .then(() => {
       winston.debug('Inserting administration entitytypes...');
       return importBsonEntityTypes(
-        path.respolve(
+        path.resolve(
           __dirname,
           '/../../node_modules/Communibase/test/resources/dump/blueprint/EntityType.bson'
         ),

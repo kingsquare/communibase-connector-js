@@ -1,5 +1,3 @@
-
-
 require('isomorphic-fetch');
 require('isomorphic-form-data');
 
@@ -11,15 +9,16 @@ const io = require('socket.io-client');
 const LRU = require('lru-cache');
 const Promise = require('bluebird');
 const moment = require('moment');
+const winston = require('winston');
 
 const util = require('./util');
 
 function defer() {
-  let resolve,
-    reject;
-  const promise = new Promise(function () {
-    resolve = arguments[0];
-    reject = arguments[1];
+  let resolve;
+  let reject;
+  const promise = new Promise((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
   });
   return {
     resolve,
@@ -28,7 +27,7 @@ function defer() {
   };
 }
 
-function CommunibaseError(data, task) {
+function CommunibaseError(data) { // , task
   this.name = 'CommunibaseError';
   this.code = (data.code || 500);
   this.message = (data.message || '');
@@ -44,7 +43,7 @@ CommunibaseError.prototype = Error.prototype;
  * @param key - The communibase api key
  * @constructor
  */
-const Connector = function (key) {
+const Connector = function Connector(key) {
   const self = this;
   this.getByIdQueue = {};
   this.getByIdPrimed = false;
@@ -63,8 +62,8 @@ const Connector = function (key) {
 
     if (!self.key && !self.token) {
       fail(new Error('Missing key or token for Communibase Connector: please set COMMUNIBASE_KEY environment' +
-			' variable, or spawn a new instance using require(\'communibase-connector-js\').clone(\'<' +
-			'your api key>\')'));
+      ' variable, or spawn a new instance using require(\'communibase-connector-js\').clone(\'<' +
+      'your api key>\')'));
       return;
     }
 
@@ -94,7 +93,7 @@ const Connector = function (key) {
     }
 
     let success = false;
-    return Promise.resolve(fetch(task.url, task.options)).then((response) => {
+    Promise.resolve(fetch(task.url, task.options)).then((response) => {
       success = (response.status === 200);
       return response.json();
     }).then((result) => {
@@ -117,7 +116,7 @@ const Connector = function (key) {
 // Connector.prototype.serviceUrl;
 // Connector.prototype.serviceUrlIsHttps;
 
-Connector.prototype.setServiceUrl = function (newServiceUrl) {
+Connector.prototype.setServiceUrl = function setServiceUrl(newServiceUrl) {
   if (!newServiceUrl) {
     throw new Error('Cannot set empty service-url');
   }
@@ -131,7 +130,7 @@ Connector.prototype.setServiceUrl = function (newServiceUrl) {
  * @returns {Promise}
  *
  */
-Connector.prototype._search = function (objectType, selector, params) {
+Connector.prototype._search = function _search(objectType, selector, params) {
   const deferred = defer();
   this.queue.push({
     deferred,
@@ -150,7 +149,7 @@ Connector.prototype._search = function (objectType, selector, params) {
  * Bare boned retrieval by objectIds
  * @returns {Promise}
  */
-Connector.prototype._getByIds = function (objectType, objectIds, params) {
+Connector.prototype._getByIds = function _getByIds(objectType, objectIds, params) {
   return this._search(objectType, {
     _id: { $in: objectIds }
   }, params);
@@ -159,7 +158,7 @@ Connector.prototype._getByIds = function (objectType, objectIds, params) {
 /**
  * Default object retrieval: should provide cachable objects
  */
-Connector.prototype.spoolQueue = function () {
+Connector.prototype.spoolQueue = function spoolQueue() {
   const self = this;
   Object.keys(this.getByIdQueue).forEach((objectType) => {
     const deferredsById = this.getByIdQueue[objectType];
@@ -199,7 +198,7 @@ Connector.prototype.spoolQueue = function () {
  * @param {string|null} [versionId=null] - optional versionId to retrieve
  * @returns {Promise} - for object: a key/value object with object data
  */
-Connector.prototype.getById = function (objectType, objectId, params, versionId) {
+Connector.prototype.getById = function getById(objectType, objectId, params, versionId) {
   if (typeof objectId !== 'string' || objectId.length !== 24) {
     return Promise.reject(new Error('Invalid objectId'));
   }
@@ -263,7 +262,7 @@ Connector.prototype.getById = function (objectType, objectId, params, versionId)
  * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
  * @returns {Promise} - for array of key/value objects
  */
-Connector.prototype.getByIds = function (objectType, objectIds, params) {
+Connector.prototype.getByIds = function getByIds(objectType, objectIds, params) {
   if (objectIds.length === 0) {
     return Promise.resolve([]);
   }
@@ -276,8 +275,8 @@ Connector.prototype.getByIds = function (objectType, objectIds, params) {
   return Promise.all(
     objectIds.map(objectId => this.getById(objectType, objectId, params).reflect())
   ).then((inspections) => {
-    let result = [],
-      error = null;
+    const result = [];
+    let error = null;
     inspections.forEach((inspection) => {
       if (inspection.isRejected()) {
         error = inspection.reason();
@@ -305,7 +304,7 @@ Connector.prototype.getByIds = function (objectType, objectIds, params) {
  * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
  * @returns {Promise} - for array of key/value objects
  */
-Connector.prototype.getAll = function (objectType, params) {
+Connector.prototype.getAll = function getAll(objectType, params) {
   if (this.cache && !(params && params.fields)) {
     return this.search(objectType, {}, params);
   }
@@ -330,12 +329,12 @@ Connector.prototype.getAll = function (objectType, params) {
  * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
  * @returns {Promise} - for array of key/value objects
  */
-Connector.prototype.getIds = function (objectType, selector, params) {
-  let hash,
-    result;
+Connector.prototype.getIds = function getIds(objectType, selector, params) {
+  let hash;
+  let result;
 
   if (this.cache) {
-    hash = JSON.stringify(arguments);
+    hash = JSON.stringify([objectType, selector, params]);
     if (!this.cache.getIdsCaches[objectType]) {
       this.cache.getIdsCaches[objectType] = LRU(1000); // 1000 getIds are this.cached, per entityType
     }
@@ -345,17 +344,21 @@ Connector.prototype.getIds = function (objectType, selector, params) {
     }
   }
 
-  result = this.search(objectType, selector, Object.assign({ fields: '_id' }, params)).then(results => results.map(result => result._id));
+  const resultPromise = this.search(
+    objectType,
+    selector,
+    Object.assign({ fields: '_id' }, params)
+  ).then(results => results.map(obj => obj._id));
 
   if (this.cache) {
     const self = this;
-    return result.then((ids) => {
+    return resultPromise.then((ids) => {
       self.cache.getIdsCaches[objectType].set(hash, ids);
       return ids;
     });
   }
 
-  return result;
+  return resultPromise;
 };
 
 /**
@@ -365,7 +368,7 @@ Connector.prototype.getIds = function (objectType, selector, params) {
  * @param {object} selector - { firstName: "Henk" }
  * @returns {Promise} - for a string OR undefined if not found
  */
-Connector.prototype.getId = function (objectType, selector) {
+Connector.prototype.getId = function getId(objectType, selector) {
   return this.getIds(objectType, selector, { limit: 1 }).then(ids => ids.pop());
 };
 
@@ -376,7 +379,7 @@ Connector.prototype.getId = function (objectType, selector) {
  * @param params
  * @returns {Promise} for objects
  */
-Connector.prototype.search = function (objectType, selector, params) {
+Connector.prototype.search = function search(objectType, selector, params) {
   if (this.cache && !(params && params.fields)) {
     const self = this;
     return self.getIds(objectType, selector, params).then(ids => self.getByIds(objectType, ids));
@@ -396,12 +399,12 @@ Connector.prototype.search = function (objectType, selector, params) {
  * @param object - the to-be-saved object data
  * @returns promise for object (the created or updated object)
  */
-Connector.prototype.update = function (objectType, object) {
-  let deferred = defer(),
-    operation = ((object._id && (object._id.length > 0)) ? 'PUT' : 'POST');
+Connector.prototype.update = function update(objectType, object) {
+  const deferred = defer();
+  const operation = ((object._id && (object._id.length > 0)) ? 'PUT' : 'POST');
 
   if (object._id && this.cache && this.cache.objectCache && this.cache.objectCache[objectType] &&
-			this.cache.objectCache[objectType][object._id]) {
+      this.cache.objectCache[objectType][object._id]) {
     this.cache.objectCache[objectType][object._id] = null;
   }
 
@@ -424,11 +427,11 @@ Connector.prototype.update = function (objectType, object) {
  * @param objectId
  * @returns promise (for null)
  */
-Connector.prototype.destroy = function (objectType, objectId) {
+Connector.prototype.destroy = function destroy(objectType, objectId) {
   const deferred = defer();
 
   if (this.cache && this.cache.objectCache && this.cache.objectCache[objectType] &&
-			this.cache.objectCache[objectType][objectId]) {
+      this.cache.objectCache[objectType][objectId]) {
     this.cache.objectCache[objectType][objectId] = null;
   }
 
@@ -450,7 +453,7 @@ Connector.prototype.destroy = function (objectType, objectId) {
  * @param objectId
  * @returns promise (for null)
  */
-Connector.prototype.undelete = function (objectType, objectId) {
+Connector.prototype.undelete = function undelete(objectType, objectId) {
   const deferred = defer();
 
   this.queue.push({
@@ -470,14 +473,10 @@ Connector.prototype.undelete = function (objectType, objectId) {
  * @param fileId
  * @returns {Stream} see http://nodejs.org/api/stream.html#stream_stream
  */
-Connector.prototype.createReadStream = function (fileId) {
-  let requestClient = https,
-    req,
-    fileStream = stream.PassThrough();
-  if (!this.serviceUrlIsHttps) {
-    requestClient = http;
-  }
-  req = requestClient.request(`${this.serviceUrl}File.json/binary/${fileId}?api_key=${this.key}`, (res) => {
+Connector.prototype.createReadStream = function createReadStream(fileId) {
+  const requestClient = (this.serviceUrlIsHttps ? https : http);
+  const fileStream = stream.PassThrough();
+  const req = requestClient.request(`${this.serviceUrl}File.json/binary/${fileId}?api_key=${this.key}`, (res) => {
     if (res.statusCode === 200) {
       res.pipe(fileStream);
       return;
@@ -502,7 +501,7 @@ Connector.prototype.createReadStream = function (fileId) {
  *
  * @param {Stream|Buffer|String} resource a stream, buffer or a content-string
  * @param {String} name The binary name (i.e. a filename)
- * @param {String} destinationPath The "directory location" (sic)
+ * @param {String} destinationPath The "directory location"
  * @param {String} id The `File` id to replace the contents of (optional; if not set then creates a new File)
  *
  * @returns {Promise}
@@ -554,7 +553,7 @@ Connector.prototype.updateBinary = function updateBinary(resource, name, destina
  * @param apiKey
  * @returns {Connector}
  */
-Connector.prototype.clone = function (apiKey) {
+Connector.prototype.clone = function clone(apiKey) {
   return new Connector(apiKey);
 };
 
@@ -571,7 +570,7 @@ Connector.prototype.clone = function (apiKey) {
  * @param {string} objectId
  * @returns promise for VersionInformation[]
  */
-Connector.prototype.getHistory = function (objectType, objectId) {
+Connector.prototype.getHistory = function getHistory(objectType, objectId) {
   const deferred = defer();
   this.queue.push({
     deferred,
@@ -589,7 +588,7 @@ Connector.prototype.getHistory = function (objectType, objectId) {
  * @param {Object} selector
  * @returns promise for VersionInformation[]
  */
-Connector.prototype.historySearch = function (objectType, selector) {
+Connector.prototype.historySearch = function historySearch(objectType, selector) {
   const deferred = defer();
   this.queue.push({
     deferred,
@@ -605,27 +604,27 @@ Connector.prototype.historySearch = function (objectType, selector) {
 /**
  * Get a single object by a DocumentReference-object. A DocumentReference object looks like
  * {
- *	rootDocumentId: '524aca8947bd91000600000c',
- *	rootDocumentEntityType: 'Person',
- *	path: [
- *		{
- *			field: 'addresses',
- *			objectId: '53440792463cda7161000003'
- *		}, ...
- *	]
+ *  rootDocumentId: '524aca8947bd91000600000c',
+ *  rootDocumentEntityType: 'Person',
+ *  path: [
+ *    {
+ *      field: 'addresses',
+ *      objectId: '53440792463cda7161000003'
+ *    }, ...
+ *  ]
  * }
  *
  * @param {object} ref - DocumentReference style, see above
  * @param {object} parentDocument
  * @return {Promise} for referred object
  */
-Connector.prototype.getByRef = function (ref, parentDocument) {
+Connector.prototype.getByRef = function getByRef(ref, parentDocument) {
   if (!(ref && ref.rootDocumentEntityType && (ref.rootDocumentId || parentDocument))) {
     return Promise.reject(new Error('Please provide a documentReference object with a type and id'));
   }
 
-  let rootDocumentEntityTypeParts = ref.rootDocumentEntityType.split('.'),
-    parentDocumentPromise;
+  const rootDocumentEntityTypeParts = ref.rootDocumentEntityType.split('.');
+  let parentDocumentPromise;
   if (rootDocumentEntityTypeParts[0] !== 'parent') {
     parentDocumentPromise = this.getById(ref.rootDocumentEntityType, ref.rootDocumentId);
   } else {
@@ -673,19 +672,18 @@ Connector.prototype.getByRef = function (ref, parentDocument) {
  * { "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
  * ]
  */
-Connector.prototype.aggregate = function (objectType, aggregationPipeline) {
+Connector.prototype.aggregate = function aggregate(objectType, aggregationPipeline) {
   if (!aggregationPipeline || !aggregationPipeline.length) {
     return Promise.reject(new Error('Please provide a valid Aggregation Pipeline.'));
   }
 
-  let hash,
-    result;
+  let hash;
   if (this.cache) {
-    hash = JSON.stringify(arguments);
+    hash = JSON.stringify([objectType, aggregationPipeline]);
     if (!this.cache.aggregateCaches[objectType]) {
       this.cache.aggregateCaches[objectType] = LRU(1000); // 1000 getIds are this.cached, per entityType
     }
-    result = this.cache.aggregateCaches[objectType].get(hash);
+    const result = this.cache.aggregateCaches[objectType].get(hash);
     if (result) {
       return Promise.resolve(result);
     }
@@ -701,16 +699,16 @@ Connector.prototype.aggregate = function (objectType, aggregationPipeline) {
     }
   });
 
-  result = deferred.promise;
+  const resultPromise = deferred.promise;
 
   if (this.cache) {
-    return result.then(function (result) {
+    return resultPromise.then((result) => {
       this.cache.aggregateCaches[objectType].set(hash, result);
       return result;
     });
   }
 
-  return result;
+  return resultPromise;
 };
 
 /**
@@ -719,7 +717,7 @@ Connector.prototype.aggregate = function (objectType, aggregationPipeline) {
  * @param invoiceId
  * @returns {*}
  */
-Connector.prototype.finalizeInvoice = function (invoiceId) {
+Connector.prototype.finalizeInvoice = function finalizeInvoice(invoiceId) {
   const deferred = defer();
   this.queue.push({
     deferred,
@@ -735,7 +733,7 @@ Connector.prototype.finalizeInvoice = function (invoiceId) {
  * @param communibaseAdministrationId
  * @param socketServiceUrl
  */
-Connector.prototype.enableCache = function (communibaseAdministrationId, socketServiceUrl) {
+Connector.prototype.enableCache = function enableCache(communibaseAdministrationId, socketServiceUrl) {
   const self = this;
   this.cache = {
     getIdsCaches: {},
@@ -752,7 +750,7 @@ Connector.prototype.enableCache = function (communibaseAdministrationId, socketS
   this.cache.dirtySock.on('message', (dirtyness) => {
     const dirtyInfo = dirtyness.split('|');
     if (dirtyInfo.length !== 2) {
-      console.log(`${new Date()}: Got weird dirty sock data? ${dirtyness}`);
+      winston.warn(`${new Date()}: Got weird dirty sock data? ${dirtyness}`);
       return;
     }
     self.cache.getIdsCaches[dirtyInfo[0]] = null;

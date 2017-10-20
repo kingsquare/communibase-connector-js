@@ -25,7 +25,7 @@ cbc.search('Person', { firstName: 'Tim' }).then(function (peopleCalledTim) {
 ```
 
 Advanced usage
---------------
+--
 
 When you need to connect using multiple Communibase API Keys for some reason, you need to 'clone' the connector per key.
 
@@ -46,9 +46,9 @@ COMMUNIBASE_API_URL=https://17.42.0.1:8888/0.1/ COMMUNIBASE_API_HOST=api.communi
 ```
 
 API
----
+--
 
-The following methods exists, all returning a [promise](https://github.com/petkaantonov/bluebird/blob/master/API.md#new-promisefunctionfunction-resolve-function-reject-resolver---promise) for a result.
+The following methods exists, all returning a [promise](https://github.com/petkaantonov/bluebird/blob/master/API.md#new-promisefunctionfunction-resolve-function-reject-resolver--promise) for a result.
 
 "selectors" may be provided [MongoDb style](http://docs.mongodb.org/manual/reference/method/db.collection.find/#db.collection.find).
 
@@ -112,19 +112,30 @@ The ```update```-Promise may be rejected if an entity is not considered valid. T
 }
 ```
 
-Bonus features
-==============
+File handling
 --
 
-create a readable stream
-------------------------
+upload a new file or update an exiting one:
+
+```js
+/**
+ * @param {Stream|Buffer|String} resource a stream, buffer or a content-string
+ * @param {String} name The binary name (i.e. a filename)
+ * @param {String} destinationPath The "directory location"
+ * @param {String} id The `File` id to replace the contents of (optional; if not set then creates a new File)
+ */
+
+cbc.updateBinary = function updateBinary(resource, name, destinationPath, id) {
+```
+
+create a readable stream:
 
 ```js
 cbc.createReadStream(fileId) : Stream;
 ```
 
 Work with document history
---------------------------
+--
 
 First, find the _id of both the document and the version you are looking for. To find all available versions of a specific document, use
 
@@ -167,7 +178,7 @@ var participantCounters = cbc.aggregate('Event', [
 ```
 
 Work with "DocumentReferences"
-------------------------------
+--
 
 A DocumentReference is a unified specification to point to some other (sub-)doucment
 within the administration. A DocumentReference looks like:
@@ -188,7 +199,7 @@ within the administration. A DocumentReference looks like:
 The contents will be parsed and the requested data will be retrieved.
 
 EXPERIMENTAL - Work with local in-memory cache for query results
-----------------------------------------------------------------
+--
 
 The connector may cache documents locally. To enable in-memory cache for a certain instance of the connector:
 

@@ -9,35 +9,35 @@
   "deregistrationDate": null,
   "deregistrationReason": "",
   "addressReference": {
-	"_id": null,
-	"documentReference": null,
-	"address": null
+  "_id": null,
+  "documentReference": null,
+  "address": null
   },
   "phoneNumberReference": {
-	"_id": null,
-	"documentReference": null,
-	"phoneNumber": {
-	  "areaCode": "30",
-	  "countryCode": "+31",
-	  "subscriberNumber": "2754669",
-	  "type": "private"
-	}
+  "_id": null,
+  "documentReference": null,
+  "phoneNumber": {
+    "areaCode": "30",
+    "countryCode": "+31",
+    "subscriberNumber": "2754669",
+    "type": "private"
+  }
   },
   "emailAddressReference": {
-	"_id": null,
-	"documentReference": {
-	  "_id": null,
-	  "rootDocumentEntityType": "Person",
-	  "rootDocumentId": "528c9a9172c1bd1707002f82",
-	  "path": [
-		{
-		  "field": "emailAddresses",
-		  "objectId": "528c992a5deb71133c003976",
-		  "_id": "5538e68cbb1bf31f00dfee56"
-		}
-	  ]
-	},
-	"emailAddress": null
+  "_id": null,
+  "documentReference": {
+    "_id": null,
+    "rootDocumentEntityType": "Person",
+    "rootDocumentId": "528c9a9172c1bd1707002f82",
+    "path": [
+    {
+      "field": "emailAddresses",
+      "objectId": "528c992a5deb71133c003976",
+      "_id": "5538e68cbb1bf31f00dfee56"
+    }
+    ]
+  },
+  "emailAddress": null
   },
   "invoicePurchaseOrderNumber": "",
   "roleDescription": "",
@@ -47,26 +47,26 @@
   "ignoreMailing": false,
   "role": "member",
   "invoicedPeriods": [
-	{
-	  "_id": "528e140e3d16238c0d00429d",
-	  "startDate": "2008-12-31T23:00:00.000Z",
-	  "endDate": "2014-12-31T23:00:00.000Z"
-	},
-	{
-	  "_id": "52fca17c9fc535167a00020f",
-	  "startDate": "2013-12-31T23:00:00.000Z",
-	  "endDate": "2014-12-31T23:00:00.000Z"
-	},
-	{
-	  "_id": "551956c43965094c14000110",
-	  "startDate": "2015-03-29T22:00:00.000Z",
-	  "endDate": "2015-12-31T23:00:00.000Z"
-	},
-	{
-	  "_id": "55420d970294e7d1ab00005c",
-	  "startDate": "2015-03-22T23:00:00.000Z",
-	  "endDate": "2015-12-31T23:00:00.000Z"
-	}
+  {
+    "_id": "528e140e3d16238c0d00429d",
+    "startDate": "2008-12-31T23:00:00.000Z",
+    "endDate": "2014-12-31T23:00:00.000Z"
+  },
+  {
+    "_id": "52fca17c9fc535167a00020f",
+    "startDate": "2013-12-31T23:00:00.000Z",
+    "endDate": "2014-12-31T23:00:00.000Z"
+  },
+  {
+    "_id": "551956c43965094c14000110",
+    "startDate": "2015-03-29T22:00:00.000Z",
+    "endDate": "2015-12-31T23:00:00.000Z"
+  },
+  {
+    "_id": "55420d970294e7d1ab00005c",
+    "startDate": "2015-03-22T23:00:00.000Z",
+    "endDate": "2015-12-31T23:00:00.000Z"
+  }
   ],
   "nextInvoiceAdditionalInvoiceItems": [],
   "discountPercentage": 0,

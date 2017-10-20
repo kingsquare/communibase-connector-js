@@ -11,7 +11,6 @@ module.exports.streamPromise = stream => new Promise((resolve, reject) => {
     buffer.push(data);
   });
   stream.on('end', () => {
-    console.log('end');
     resolve(Buffer.concat(buffer));
   });
   stream.on('error', (err) => {
@@ -26,7 +25,7 @@ module.exports.streamPromise = stream => new Promise((resolve, reject) => {
  *
  * @returns {Promise}
  */
-module.exports.getResourceBufferPromise = function (resource) {
+module.exports.getResourceBufferPromise = function getResourceBufferPromise(resource) {
   // might be a string
   if (typeof resource === 'string') {
     resource = new Buffer(resource);

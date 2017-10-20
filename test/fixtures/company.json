@@ -13,48 +13,48 @@
   "updatedBy": "Eefje Klinck - (Client user 526e8acc150cf10e15000e2a)",
   "startDate": null,
   "phoneNumbers": [
-	{
-	  "countryCode": "",
-	  "areaCode": "088",
-	  "subscriberNumber": "3300700",
-	  "_id": "55421d481280c3fc69000012",
-	  "type": "work"
-	}
+  {
+    "countryCode": "",
+    "areaCode": "088",
+    "subscriberNumber": "3300700",
+    "_id": "55421d481280c3fc69000012",
+    "type": "work"
+  }
   ],
   "emailAddresses": [
-	{
-	  "emailAddress": "info@nevi.nl",
-	  "comment": "",
-	  "_id": "55421d5ae3cc3cb04b000013",
-	  "type": "work"
-	}
+  {
+    "emailAddress": "info@nevi.nl",
+    "comment": "",
+    "_id": "55421d5ae3cc3cb04b000013",
+    "type": "work"
+  }
   ],
   "addresses": [
-	{
-	  "street": "Postbus",
-	  "streetNumber": "198",
-	  "streetNumberAddition": "",
-	  "zipcode": "2700 AD",
-	  "city": "ZOETERMEER",
-	  "latitude": 0,
-	  "longitude": 0,
-	  "property": "",
-	  "_id": "55421b6a0f2caec5f2000004",
-	  "type": "postal",
-	  "countryCode": "DE"
-	},
-	{
-	  "street": "Aidaschouw",
-	  "streetNumber": "5",
-	  "streetNumberAddition": "",
-	  "zipcode": "2726 JZ",
-	  "city": "ZOETERMEER",
-	  "latitude": 52.065441,
-	  "longitude": 4.490956,
-	  "property": "(Wijk 26)",
-	  "_id": "55421b57b27feca419000003",
-	  "type": "visit",
-	  "countryCode": "NL"
-	}
+  {
+    "street": "Postbus",
+    "streetNumber": "198",
+    "streetNumberAddition": "",
+    "zipcode": "2700 AD",
+    "city": "ZOETERMEER",
+    "latitude": 0,
+    "longitude": 0,
+    "property": "",
+    "_id": "55421b6a0f2caec5f2000004",
+    "type": "postal",
+    "countryCode": "DE"
+  },
+  {
+    "street": "Aidaschouw",
+    "streetNumber": "5",
+    "streetNumberAddition": "",
+    "zipcode": "2726 JZ",
+    "city": "ZOETERMEER",
+    "latitude": 52.065441,
+    "longitude": 4.490956,
+    "property": "(Wijk 26)",
+    "_id": "55421b57b27feca419000003",
+    "type": "visit",
+    "countryCode": "NL"
+  }
   ]
 }

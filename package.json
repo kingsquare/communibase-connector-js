@@ -1,7 +1,7 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "0.5.14",
+  "version": "0.5.15",
   "dependencies": {
     "async": "^2.5.0",
     "bluebird": "^3.5.1",
@@ -9,7 +9,8 @@
     "isomorphic-form-data": "^1.0.0",
     "lru-cache": "^4.1.1",
     "moment": "^2.19.1",
-    "socket.io-client": "^2.0.3"
+    "socket.io-client": "^2.0.3",
+    "winston": "^2.4.0"
   },
   "devDependencies": {
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
@@ -19,7 +20,8 @@
     "bson-stream": "0.0.8",
     "mocha": "4.0.1",
     "mongodb": "^2.2.33",
-    "winston": "^2.4.0"
+    "eslint": "^4.6.1",
+    "eslint-config-kingsquare": "^1.0.8"
   },
   "repository": {
     "type": "git",
@@ -32,6 +34,6 @@
   },
   "scripts": {
     "build": "babel ./src -d ./lib",
-    "test": "mocha --compilers js:babel-core/register  --delay"
+    "test": "mocha --require babel-register  --delay"
   }
 }

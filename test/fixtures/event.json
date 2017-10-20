@@ -26,45 +26,45 @@
   "eventdeskLanguage": "NL",
   "type": "meeting",
   "sessions": [
-	{
-	  "title": "Ooa Startbijeenkomst 2016",
-	  "startDate": "2016-01-28T12:00:00.000Z",
-	  "endDate": "2015-05-28T16:00:00.000Z",
-	  "eventdesk": false,
-	  "type": "Other",
-	  "maxParticipants": null,
-	  "generalLedgerAccountNumber": "",
-	  "costCentre": "",
-	  "multipleSelectionAllowed": false,
-	  "participants": [],
-	  "tariffs": []
-	},
-	{
-	  "title": "Ooa Kennismakingsbijeenkomst nieuwe leden",
-	  "startDate": "2016-01-28T09:00:00.000Z",
-	  "endDate": "2016-01-28T11:00:00.000Z",
-	  "eventdesk": true,
-	  "type": "Workshop",
-	  "maxParticipants": null,
-	  "generalLedgerAccountNumber": "",
-	  "costCentre": "",
-	  "multipleSelectionAllowed": false,
-	  "participants": [],
-	  "tariffs": []
-	},
-	{
-	  "title": "Ooa Informatiebijeenkomst facilitators",
-	  "startDate": "2016-01-28T09:00:00.000Z",
-	  "endDate": "2016-01-28T11:00:00.000Z",
-	  "eventdesk": false,
-	  "type": "Workshop",
-	  "maxParticipants": null,
-	  "generalLedgerAccountNumber": "",
-	  "costCentre": "",
-	  "multipleSelectionAllowed": false,
-	  "participants": [],
-	  "tariffs": []
-	}
+  {
+    "title": "Ooa Startbijeenkomst 2016",
+    "startDate": "2016-01-28T12:00:00.000Z",
+    "endDate": "2015-05-28T16:00:00.000Z",
+    "eventdesk": false,
+    "type": "Other",
+    "maxParticipants": null,
+    "generalLedgerAccountNumber": "",
+    "costCentre": "",
+    "multipleSelectionAllowed": false,
+    "participants": [],
+    "tariffs": []
+  },
+  {
+    "title": "Ooa Kennismakingsbijeenkomst nieuwe leden",
+    "startDate": "2016-01-28T09:00:00.000Z",
+    "endDate": "2016-01-28T11:00:00.000Z",
+    "eventdesk": true,
+    "type": "Workshop",
+    "maxParticipants": null,
+    "generalLedgerAccountNumber": "",
+    "costCentre": "",
+    "multipleSelectionAllowed": false,
+    "participants": [],
+    "tariffs": []
+  },
+  {
+    "title": "Ooa Informatiebijeenkomst facilitators",
+    "startDate": "2016-01-28T09:00:00.000Z",
+    "endDate": "2016-01-28T11:00:00.000Z",
+    "eventdesk": false,
+    "type": "Workshop",
+    "maxParticipants": null,
+    "generalLedgerAccountNumber": "",
+    "costCentre": "",
+    "multipleSelectionAllowed": false,
+    "participants": [],
+    "tariffs": []
+  }
   ],
   "tariffs": [],
   "participants": []

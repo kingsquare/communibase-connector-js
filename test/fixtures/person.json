@@ -1,19 +1,19 @@
 {
   "addresses": [
-	{
-	  "_id": "528c992ac0913c6f01003975",
-	  "street": "Theodorus Backerlaan",
-	  "streetNumber": "8",
-	  "streetNumberAddition": "",
-	  "zipcode": "3984PJ",
-	  "city": "ODIJK",
-	  "latitude": 0,
-	  "longitude": 0,
-	  "property": "",
-	  "rolId": 3578121,
-	  "type": "visit",
-	  "countryCode": "NL"
-	}
+  {
+    "_id": "528c992ac0913c6f01003975",
+    "street": "Theodorus Backerlaan",
+    "streetNumber": "8",
+    "streetNumberAddition": "",
+    "zipcode": "3984PJ",
+    "city": "ODIJK",
+    "latitude": 0,
+    "longitude": 0,
+    "property": "",
+    "rolId": 3578121,
+    "type": "visit",
+    "countryCode": "NL"
+  }
   ],
   "birthCity": "",
   "birthDate": "1959-03-09T23:00:00.000Z",
@@ -21,20 +21,20 @@
   "crsProperties": "[{\"Kenmerk\":\"Register CMC\",\"VrijeWaarde\":null}]",
   "deceasedDate": null,
   "emailAddresses": [
-	{
-	  "_id": "528c992a5deb71133c003976",
-	  "emailAddress": "j.van.zutphen@belastingdienst.nl",
-	  "comment": "",
-	  "rolId": 3600787,
-	  "type": "private"
-	},
-	{
-	  "_id": "528c992a19c46a00f4003977",
-	  "emailAddress": "jannyz@xs4all.nl",
-	  "comment": "",
-	  "rolId": 3595365,
-	  "type": "private"
-	}
+  {
+    "_id": "528c992a5deb71133c003976",
+    "emailAddress": "j.van.zutphen@belastingdienst.nl",
+    "comment": "",
+    "rolId": 3600787,
+    "type": "private"
+  },
+  {
+    "_id": "528c992a19c46a00f4003977",
+    "emailAddress": "jannyz@xs4all.nl",
+    "comment": "",
+    "rolId": 3595365,
+    "type": "private"
+  }
   ],
   "firstName": "Janny",
   "gender": "F",
@@ -43,95 +43,95 @@
   "maidenName": "",
   "middleName": "van",
   "phoneNumbers": [
-	{
-	  "_id": "528c992a15cfafd062003978",
-	  "areaCode": "30",
-	  "countryCode": "+31",
-	  "rolId": 3603191,
-	  "subscriberNumber": "2754669",
-	  "type": "private"
-	},
-	{
-	  "_id": "528c992a8ce9540af3003979",
-	  "areaCode": "6",
-	  "countryCode": "+31",
-	  "rolId": 3609987,
-	  "subscriberNumber": "18600888",
-	  "type": "privateGsm"
-	},
-	{
-	  "_id": "528c992aee12db640800397a",
-	  "areaCode": "30",
-	  "countryCode": "+31",
-	  "rolId": 3604437,
-	  "subscriberNumber": "6564005",
-	  "type": "private"
-	}
+  {
+    "_id": "528c992a15cfafd062003978",
+    "areaCode": "30",
+    "countryCode": "+31",
+    "rolId": 3603191,
+    "subscriberNumber": "2754669",
+    "type": "private"
+  },
+  {
+    "_id": "528c992a8ce9540af3003979",
+    "areaCode": "6",
+    "countryCode": "+31",
+    "rolId": 3609987,
+    "subscriberNumber": "18600888",
+    "type": "privateGsm"
+  },
+  {
+    "_id": "528c992aee12db640800397a",
+    "areaCode": "30",
+    "countryCode": "+31",
+    "rolId": 3604437,
+    "subscriberNumber": "6564005",
+    "type": "private"
+  }
   ],
   "positions": [
-	{
-	  "_id": "528c992a80cf01afa300397b",
-	  "addressReference": {
-		"ref": "Company|528c887772c1bd17070011cf.addresses|528c877c7bcb1bdcc7001951",
-		"address": {
-		  "city": "Teststad",
-		  "countryCode": "NL",
-		  "latitude": 0,
-		  "longitude": 0,
-		  "property": "",
-		  "street": "Teststraat",
-		  "streetNumber": 18,
-		  "streetNumberAddition": "",
-		  "type": "postal",
-		  "zipcode": "1988 AB"
-		},
-		"documentReference": {
-		  "path": [],
-		  "rootDocumentEntityType": "",
-		  "rootDocumentId": null
-		}
-	  },
-	  "comment": "",
-	  "companyId": "528c887772c1bd17070011cf",
-	  "companyRolId": 3555021,
-	  "emailAddressReference": {
-		"documentReference": {
-		  "path": [{
-			  "field": "emailAddresses",
-			  "objectId": "528c992a5deb71133c003976",
-			  "_id": "559fa1c2b4580eb8004581a8"
-		  }],
-		  "rootDocumentEntityType": "parent.parent.parent",
-		  "rootDocumentId": null
-		},
-		"emailAddress": {
-		  "comment": "",
-		  "emailAddress": "",
-		  "type": "work"
-		}
-	  },
-	  "endDate": null,
-	  "ignoreMailing": false,
-	  "isMeelezer": false,
-	  "phoneNumberReference": {
-		"ref": "Company|528c887772c1bd17070011cf.phoneNumbers|528c877c7a6115b269001954",
-		"documentReference": {
-		  "path": [],
-		  "rootDocumentEntityType": "",
-		  "rootDocumentId": null
-		},
-		"phoneNumber": {
-		  "areaCode": "",
-		  "countryCode": "",
-		  "subscriberNumber": "",
-		  "type": "work"
-		}
-	  },
-	  "preferredTypeOfContact": "mail",
-	  "rolId": 3566933,
-	  "startDate": "2008-12-31T23:00:00.000Z",
-	  "title": "Medewerker"
-	}
+  {
+    "_id": "528c992a80cf01afa300397b",
+    "addressReference": {
+    "ref": "Company|528c887772c1bd17070011cf.addresses|528c877c7bcb1bdcc7001951",
+    "address": {
+      "city": "Teststad",
+      "countryCode": "NL",
+      "latitude": 0,
+      "longitude": 0,
+      "property": "",
+      "street": "Teststraat",
+      "streetNumber": 18,
+      "streetNumberAddition": "",
+      "type": "postal",
+      "zipcode": "1988 AB"
+    },
+    "documentReference": {
+      "path": [],
+      "rootDocumentEntityType": "",
+      "rootDocumentId": null
+    }
+    },
+    "comment": "",
+    "companyId": "528c887772c1bd17070011cf",
+    "companyRolId": 3555021,
+    "emailAddressReference": {
+    "documentReference": {
+      "path": [{
+        "field": "emailAddresses",
+        "objectId": "528c992a5deb71133c003976",
+        "_id": "559fa1c2b4580eb8004581a8"
+      }],
+      "rootDocumentEntityType": "parent.parent.parent",
+      "rootDocumentId": null
+    },
+    "emailAddress": {
+      "comment": "",
+      "emailAddress": "",
+      "type": "work"
+    }
+    },
+    "endDate": null,
+    "ignoreMailing": false,
+    "isMeelezer": false,
+    "phoneNumberReference": {
+    "ref": "Company|528c887772c1bd17070011cf.phoneNumbers|528c877c7a6115b269001954",
+    "documentReference": {
+      "path": [],
+      "rootDocumentEntityType": "",
+      "rootDocumentId": null
+    },
+    "phoneNumber": {
+      "areaCode": "",
+      "countryCode": "",
+      "subscriberNumber": "",
+      "type": "work"
+    }
+    },
+    "preferredTypeOfContact": "mail",
+    "rolId": 3566933,
+    "startDate": "2008-12-31T23:00:00.000Z",
+    "title": "Medewerker"
+  }
   ],
   "preferredTypeOfContact": "email",
   "registeredDate": "2013-11-19T23:00:00.000Z",

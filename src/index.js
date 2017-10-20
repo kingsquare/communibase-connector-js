@@ -526,11 +526,17 @@ Connector.prototype.updateBinary = function updateBinary(resource, name, destina
 
     // create a new File
     const deferred = defer();
-
     const formData = new FormData();
 
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/FormData/append
+    // officially, formdata may contain blobs or strings. node doesn't do blobs, but when polymorphing in a browser we
+    // may cast it to one for it to work properly...
+    if (window && window.Blob) {
+      buffer = new Blob([buffer]);
+    }
+
     formData.append('File', buffer, name);
-    formData.append('metadata', new Buffer(JSON.stringify(metaData)));
+    formData.append('metadata', JSON.stringify(metaData));
 
     this.queue.push({
       deferred,

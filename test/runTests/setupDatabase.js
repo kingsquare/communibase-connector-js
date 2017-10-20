@@ -112,7 +112,7 @@ module.exports = function () {
       return importBsonEntityTypes(
         path.resolve(
           __dirname,
-          '/../../node_modules/Communibase/test/resources/dump/blueprint/EntityType.bson'
+          '../../node_modules/Communibase/test/resources/dump/blueprint/EntityType.bson'
         ),
         process.env.TEST_ADMINISTRATION_DB_URI
       );

@@ -1,6 +1,5 @@
 /* global Promise:true */
-
-
+const path = require('path');
 const Promise = require('bluebird');
 const mongodb = require('mongodb');
 
@@ -110,8 +109,12 @@ module.exports = function () {
     .then(() => adminMongooseConnection.close())
     .then(() => {
       winston.debug('Inserting administration entitytypes...');
-      return importBsonEntityTypes(`${__dirname
-      }/../../node_modules/Communibase/test/resources/dump/blueprint/EntityType.bson`,
-      process.env.TEST_ADMINISTRATION_DB_URI);
+      return importBsonEntityTypes(
+        path.respolve(
+          __dirname,
+          '/../../node_modules/Communibase/test/resources/dump/blueprint/EntityType.bson'
+        ),
+        process.env.TEST_ADMINISTRATION_DB_URI
+      );
     });
 };

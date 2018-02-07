@@ -3,7 +3,7 @@
 
 const Promise = require('bluebird');
 const fs = require('fs');
-const cbc = require('../../src/index.js').clone(process.env.COMMUNIBASE_KEY);
+const cbc = require('../../lib/index.js').clone(process.env.COMMUNIBASE_KEY);
 
 module.exports = function () {
   console.log('Loading fixtures?');

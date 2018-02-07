@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "moduleResolution": "Node",
+    "module": "commonjs",
+    "outDir": "./lib",
+    "baseUrl": ".",
+    "sourceMap": true,
+    "declaration": true,
+    "noImplicitAny": true,
+    "allowSyntheticDefaultImports": true,
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "node_modules/",
+      "node_modules/@types"
+    ]
+  }
+}

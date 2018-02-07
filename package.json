@@ -1,7 +1,7 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "0.5.17",
+  "version": "0.5.18",
   "dependencies": {
     "async": "^2.5.0",
     "bluebird": "^3.5.1",
@@ -13,17 +13,21 @@
     "winston": "^2.4.0"
   },
   "devDependencies": {
+    "@types/async": "^2.0.47",
+    "@types/bluebird": "^3.5.20",
+    "@types/lru-cache": "^4.1.0",
+    "@types/node": "^9.4.1",
+    "@types/socket.io-client": "^1.4.32",
+    "@types/winston": "^2.3.7",
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-register": "^6.26.0",
     "bson-stream": "0.0.8",
-    "eslint": "^4.6.1",
-    "eslint-config-kingsquare": "^1.0.8",
-    "mocha": "4.0.1",
-    "mongodb": "^2.2.33"
+    "mocha": "5.0.0",
+    "mongodb": "^3.0.2",
+    "tslint": "^5.9.1",
+    "tslint-config-airbnb": "^5.6.0",
+    "typescript": "^2.7.1"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/kingsquare/communibase-connector-js.git"
@@ -31,10 +35,9 @@
   "browser": {},
   "main": "lib/index.js",
   "engines": {
-    "node": ">= 4"
+    "node": ">= 8.3.0"
   },
   "scripts": {
-    "build": "babel ./src -d ./lib",
-    "test": "mocha --require babel-register --delay --exit"
+    "test": "mocha --delay --exit"
   }
 }

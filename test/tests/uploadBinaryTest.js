@@ -1,6 +1,6 @@
 /* global describe: false, it: false, Promise: true */
 
-const cbc = require('../../lib/index.js').clone(null);
+const cbc = require('../../lib/index.js').default.clone(null);
 const util = require('../../lib/util.js');
 const assert = require('assert');
 const fs = require('fs');

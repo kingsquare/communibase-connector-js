@@ -12,7 +12,7 @@ describe('Async connectors', function (done) {
   }
 
   it('should work with multiple connectors in multiple administratations', (done) => {
-    const cbc = require('../../lib/index.js');
+    const cbc = require('../../lib/index.js').default;
     let promises = [],
       cbcs = {};
 

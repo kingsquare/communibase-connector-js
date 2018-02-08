@@ -881,4 +881,5 @@ export class Connector {
   }
 }
 
+// Backwards compatibility-ish
 export default new Connector(process.env.COMMUNIBASE_KEY);

@@ -1,7 +1,7 @@
 /* global describe: false, it: false, Promise: true */
 
-const cbc = require('../../src/index.js').clone(null);
-const util = require('../../src/util.js');
+const cbc = require('../../lib/index.js').clone(null);
+const util = require('../../lib/util.js');
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');

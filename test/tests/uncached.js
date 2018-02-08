@@ -2,7 +2,7 @@
 
 let ids,
   newHenk;
-let cbc = require('../../src/index.js').clone(null);
+let cbc = require('../../lib/index.js').clone(null);
 const moment = require('moment');
 const assert = require('assert');
 const fs = require('fs');

@@ -13,9 +13,12 @@ const fs = require('fs');
 const winston = require('winston');
 
 function getDropDbPromise(uri) {
-  return MongoClient.connectAsync(uri).then(db => db.dropDatabaseAsync().then(db.closeAsync)).catch(() => // err
-    // may already be dropped or non-exitent... ignore!
-    null);
+  const parsedUrl = url.parse(uri);
+  let db = new Db(parsedUrl.path.substr(1), new Server(parsedUrl.hostname, parsedUrl.port || 27017), { safe: false });
+  db = Promise.promisifyAll(db);
+  return db.openAsync().then(_db => _db.dropDatabase()).then(() => {
+    db.close();
+  });
 }
 
 function addSpectialAttributes(entityType) {

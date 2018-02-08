@@ -102,18 +102,18 @@ class CommunibaseError extends Error {
  * @constructor
  */
 export class Connector {
-  getByIdQueue: {
+  private getByIdQueue: {
     [objectType: string]: {
       [objectId: string]: Deferred,
     };
   };
-  getByIdPrimed: boolean;
-  key: string;
-  token: string;
-  serviceUrl: string;
-  serviceUrlIsHttps: boolean;
-  queue: AsyncQueue<any>;
-  cache?: {
+  private getByIdPrimed: boolean;
+  private key: string;
+  private token: string;
+  private serviceUrl: string;
+  private serviceUrlIsHttps: boolean;
+  private queue: AsyncQueue<any>;
+  private cache?: {
     objectCache: {
       [objectType: string]: {
         [objectId: string]: Promise<CommunibaseDocument>,

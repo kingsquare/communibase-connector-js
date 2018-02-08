@@ -3,8 +3,6 @@ import 'isomorphic-fetch';
 import 'isomorphic-form-data';
 import ReadableStream = NodeJS.ReadableStream;
 import * as Promise from 'bluebird';
-import { AsyncQueue } from 'async';
-import { Cache } from 'lru-cache';
 export interface Deferred {
     resolve: Function;
     reject: Function;
@@ -41,32 +39,14 @@ export interface CommunibaseParams {
  * @constructor
  */
 export declare class Connector {
-    getByIdQueue: {
-        [objectType: string]: {
-            [objectId: string]: Deferred;
-        };
-    };
-    getByIdPrimed: boolean;
-    key: string;
-    token: string;
-    serviceUrl: string;
-    serviceUrlIsHttps: boolean;
-    queue: AsyncQueue<any>;
-    cache?: {
-        objectCache: {
-            [objectType: string]: {
-                [objectId: string]: Promise<CommunibaseDocument>;
-            };
-        };
-        aggregateCaches: {
-            [objectType: string]: Cache<string, {}[]>;
-        };
-        getIdsCaches: {
-            [objectType: string]: Cache<string, string[]>;
-        };
-        isAvailable(objectType: CommunibaseEntityType, objectId: string): boolean;
-        dirtySock: SocketIOClient.Socket;
-    };
+    private getByIdQueue;
+    private getByIdPrimed;
+    private key;
+    private token;
+    private serviceUrl;
+    private serviceUrlIsHttps;
+    private queue;
+    private cache?;
     constructor(key: string);
     setServiceUrl(newServiceUrl: string): void;
     private queueSearch(objectType, selector, params?);

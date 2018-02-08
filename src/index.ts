@@ -4,14 +4,14 @@ import 'isomorphic-form-data';
 import ReadableStream = NodeJS.ReadableStream;
 import * as Promise from 'bluebird';
 import async, { AsyncQueue } from 'async';
-import http, { request as httpRequest, IncomingMessage } from 'http';
+import http, { request as httpRequest } from 'http';
 import https, { request as httpsRequest } from 'https';
 import stream from 'stream';
 import socketIoClient from 'socket.io-client';
 import moment from 'moment';
 import winston from 'winston';
 
-import { streamPromise, getResourceBufferPromise } from './util';
+import { getResourceBufferPromise } from './util';
 import lruCache, { Cache } from 'lru-cache';
 
 function defer(): Deferred {
@@ -34,19 +34,26 @@ interface Deferred {
   promise: Promise<any>&{metadata?:any};
 }
 
+type CommunibaseEntityType = 'Person' | 'Membership' | 'Event' | 'Invoice' | 'Contact' | 'Debtor' | 'File' | string;
+
 interface CommunibaseDocument {
   _id: string;
-
   [prop: string]: any;
 }
 
 interface CommunibaseDocumentReference {
-  rootDocumentEntityType: string;
+  rootDocumentEntityType: CommunibaseEntityType;
   rootDocumentId: string;
   path: {
     field: string
     objectId: string;
   }[];
+}
+
+interface CommunibaseVersionInformation {
+  _id: string;
+  updatedAt: string;
+  updatedBy: string;
 }
 
 interface CommunibaseTask {
@@ -112,12 +119,12 @@ class Connector {
       };
     };
     aggregateCaches: {
-      [objectType: string]: Cache<string, CommunibaseDocument>;
+      [objectType: string]: Cache<string, {}[]>;
     };
     getIdsCaches: {
       [objectType: string]: Cache<string, string[]>;
     };
-    isAvailable(objectType: string, objectId: string): boolean,
+    isAvailable(objectType: CommunibaseEntityType, objectId: string): boolean,
     dirtySock: SocketIOClient.Socket
   };
 
@@ -194,7 +201,7 @@ class Connector {
     );
   }
 
-  public setServiceUrl(newServiceUrl: string) {
+  public setServiceUrl(newServiceUrl: string):void {
     if (!newServiceUrl) {
       throw new Error('Cannot set empty service-url');
     }
@@ -202,7 +209,11 @@ class Connector {
     this.serviceUrlIsHttps = (newServiceUrl.indexOf('https') === 0);
   }
 
-  private privateSearch(objectType: string, selector: {}, params: CommunibaseParams) {
+  private queueSearch(
+    objectType: CommunibaseEntityType,
+    selector: {},
+    params?: CommunibaseParams,
+  ): Promise<CommunibaseDocument[]> {
     const deferred = defer();
     this.queue.push({
       deferred,
@@ -220,8 +231,12 @@ class Connector {
    * Bare boned retrieval by objectIds
    * @returns {Promise}
    */
-  private privateGetByIds(objectType: string, objectIds: string[], params?: {}): Promise<CommunibaseDocument[]> {
-    return this.privateSearch(
+  private privateGetByIds(
+    objectType: CommunibaseEntityType,
+    objectIds: string[],
+    params?: {},
+  ): Promise<CommunibaseDocument[]> {
+    return this.queueSearch(
       objectType,
       {
         _id: { $in: objectIds },
@@ -233,7 +248,7 @@ class Connector {
   /**
    * Default object retrieval: should provide cachable objects
    */
-  spoolQueue() {
+  private spoolQueue():void {
     Object.keys(this.getByIdQueue).forEach((objectType) => {
       const deferredsById = this.getByIdQueue[objectType];
       const objectIds = Object.keys(deferredsById);
@@ -276,7 +291,7 @@ class Connector {
    * @returns {Promise} - for object: a key/value object with object data
    */
   getById(
-    objectType: string,
+    objectType: CommunibaseEntityType,
     objectId: string,
     params?: CommunibaseParams,
     versionId?: string,
@@ -343,7 +358,11 @@ class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  getByIds(objectType: string, objectIds: string[], params?: CommunibaseParams) {
+  public getByIds(
+    objectType: CommunibaseEntityType,
+    objectIds: string[],
+    params?: CommunibaseParams,
+  ):Promise<CommunibaseDocument[]> {
     if (objectIds.length === 0) {
       return Promise.resolve([]);
     }
@@ -385,7 +404,7 @@ class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  getAll(objectType: string, params: CommunibaseParams) {
+  public getAll(objectType: CommunibaseEntityType, params?: CommunibaseParams):Promise<CommunibaseDocument[]> {
     if (this.cache && !(params && params.fields)) {
       return this.search(objectType, {}, params);
     }
@@ -410,7 +429,7 @@ class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  getIds(objectType: string, selector: {}, params: CommunibaseParams):Promise<string[]> {
+  public getIds(objectType: CommunibaseEntityType, selector?: {}, params?: CommunibaseParams):Promise<string[]> {
     let hash: string;
     let result;
 
@@ -448,7 +467,7 @@ class Connector {
    * @param {object} selector - { firstName: "Henk" }
    * @returns {Promise} - for a string OR undefined if not found
    */
-  getId(objectType: string, selector: {}) {
+  public getId(objectType: CommunibaseEntityType, selector?: {}) : Promise<string> {
     return this.getIds(objectType, selector, { limit: 1 }).then(ids => ids.pop());
   }
 
@@ -459,13 +478,17 @@ class Connector {
    * @param params
    * @returns {Promise} for objects
    */
-  search(objectType: string, selector: {}, params: CommunibaseParams): Promise<CommunibaseDocument[]> {
+  public search(
+    objectType: CommunibaseEntityType,
+    selector: {},
+    params?: CommunibaseParams,
+  ): Promise<CommunibaseDocument[]> {
     if (this.cache && !(params && params.fields)) {
       return this.getIds(objectType, selector, params).then(ids => this.getByIds(objectType, ids));
     }
 
     if (selector && (typeof selector === 'object') && Object.keys(selector).length) {
-      return this.privateSearch(objectType, selector, params);
+      return this.queueSearch(objectType, selector, params);
     }
 
     return this.getAll(objectType, params);
@@ -478,7 +501,7 @@ class Connector {
    * @param object - the to-be-saved object data
    * @returns promise for object (the created or updated object)
    */
-  update(objectType: string, object: CommunibaseDocument): Promise<CommunibaseDocument> {
+  public update(objectType: CommunibaseEntityType, object: CommunibaseDocument): Promise<CommunibaseDocument> {
     const deferred = defer();
     const operation = ((object._id && (object._id.length > 0)) ? 'PUT' : 'POST');
 
@@ -506,7 +529,7 @@ class Connector {
    * @param objectId
    * @returns promise (for null)
    */
-  destroy(objectType: string, objectId: string) {
+  public destroy(objectType: CommunibaseEntityType, objectId: string):Promise<null> {
     const deferred = defer();
 
     if (this.cache && this.cache.objectCache && this.cache.objectCache[objectType] &&
@@ -532,7 +555,7 @@ class Connector {
    * @param objectId
    * @returns promise (for null)
    */
-  undelete(objectType: string, objectId: string) {
+  public undelete(objectType: CommunibaseEntityType, objectId: string):Promise<CommunibaseDocument> {
     const deferred = defer();
 
     this.queue.push({
@@ -552,7 +575,7 @@ class Connector {
    * @param fileId
    * @returns {Stream} see http://nodejs.org/api/stream.html#stream_stream
    */
-  createReadStream(fileId: string):ReadableStream {
+  public createReadStream(fileId: string):ReadableStream {
     const request = (this.serviceUrlIsHttps ? httpsRequest : httpRequest);
     const fileStream = new stream.PassThrough();
     const req = request(
@@ -588,7 +611,12 @@ class Connector {
    *
    * @returns {Promise}
    */
-  updateBinary(resource:ReadableStream|Buffer|string, name:string, destinationPath:string, id:string) {
+  public updateBinary(
+    resource:ReadableStream|Buffer|string,
+    name:string,
+    destinationPath:string,
+    id:string,
+  ):Promise<CommunibaseDocument> {
     const metaData = {
       path: destinationPath,
     };
@@ -642,7 +670,7 @@ class Connector {
    * @param apiKey
    * @returns {Connector}
    */
-  clone(apiKey: string) {
+  public clone(apiKey: string):Connector {
     return new Connector(apiKey);
   }
 
@@ -659,7 +687,7 @@ class Connector {
    * @param {string} objectId
    * @returns promise for VersionInformation[]
    */
-  getHistory(objectType: string, objectId: string) {
+  public getHistory(objectType:CommunibaseEntityType, objectId: string):Promise<CommunibaseVersionInformation[]> {
     const deferred = defer();
     this.queue.push({
       deferred,
@@ -677,7 +705,7 @@ class Connector {
    * @param {Object} selector
    * @returns promise for VersionInformation[]
    */
-  historySearch(objectType: string, selector: {}) {
+  public historySearch(objectType: CommunibaseEntityType, selector: {}):Promise<CommunibaseVersionInformation[]> {
     const deferred = defer();
     this.queue.push({
       deferred,
@@ -707,7 +735,7 @@ class Connector {
    * @param {object} parentDocument
    * @return {Promise} for referred object
    */
-  getByRef(ref: CommunibaseDocumentReference, parentDocument: CommunibaseDocument) {
+  public getByRef(ref: CommunibaseDocumentReference, parentDocument: CommunibaseDocument):Promise<CommunibaseDocument> {
     if (!(ref && ref.rootDocumentEntityType && (ref.rootDocumentId || parentDocument))) {
       return Promise.reject(new Error('Please provide a documentReference object with a type and id'));
     }
@@ -763,7 +791,7 @@ class Connector {
    * { "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
    * ]
    */
-  aggregate(objectType:string, aggregationPipeline:{}[]) {
+  public aggregate(objectType:CommunibaseEntityType, aggregationPipeline:{}[]):Promise<{}[]> {
     if (!aggregationPipeline || !aggregationPipeline.length) {
       return Promise.reject(new Error('Please provide a valid Aggregation Pipeline.'));
     }
@@ -808,7 +836,7 @@ class Connector {
    * @param invoiceId
    * @returns {*}
    */
-  finalizeInvoice(invoiceId:string) {
+  public finalizeInvoice(invoiceId:string) : Promise<CommunibaseDocument> {
     const deferred = defer();
     this.queue.push({
       deferred,
@@ -824,7 +852,7 @@ class Connector {
    * @param communibaseAdministrationId
    * @param socketServiceUrl
    */
-  enableCache(communibaseAdministrationId: string, socketServiceUrl: string) {
+  public enableCache(communibaseAdministrationId: string, socketServiceUrl: string):void {
     this.cache = {
       getIdsCaches: {},
       aggregateCaches: {},

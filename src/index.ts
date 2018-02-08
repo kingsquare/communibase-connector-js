@@ -14,34 +14,21 @@ import winston from 'winston';
 import { getResourceBufferPromise } from './util';
 import lruCache, { Cache } from 'lru-cache';
 
-function defer(): Deferred {
-  let resolve;
-  let reject;
-  const promise = new Promise((promiseResolve, promiseReject) => {
-    resolve = promiseResolve;
-    reject = promiseReject;
-  });
-  return {
-    resolve,
-    reject,
-    promise,
-  };
-}
-
-interface Deferred {
+export interface Deferred {
   resolve: Function;
   reject: Function;
   promise: Promise<any>&{metadata?:any};
 }
 
-type CommunibaseEntityType = 'Person' | 'Membership' | 'Event' | 'Invoice' | 'Contact' | 'Debtor' | 'File' | string;
+export type CommunibaseEntityType = 'Person' | 'Membership' | 'Event' | 'Invoice' | 'Contact' | 'Debtor' | 'File'
+  | string;
 
-interface CommunibaseDocument {
+export interface CommunibaseDocument {
   _id: string;
   [prop: string]: any;
 }
 
-interface CommunibaseDocumentReference {
+export interface CommunibaseDocumentReference {
   rootDocumentEntityType: CommunibaseEntityType;
   rootDocumentId: string;
   path: {
@@ -50,7 +37,7 @@ interface CommunibaseDocumentReference {
   }[];
 }
 
-interface CommunibaseVersionInformation {
+export interface CommunibaseVersionInformation {
   _id: string;
   updatedAt: string;
   updatedBy: string;
@@ -73,9 +60,23 @@ interface CommunibaseTask {
   deferred: Deferred;
 }
 
-interface CommunibaseParams {
+export interface CommunibaseParams {
   fields?: string;
   limit?: number;
+}
+
+function defer(): Deferred {
+  let resolve;
+  let reject;
+  const promise = new Promise((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return {
+    resolve,
+    reject,
+    promise,
+  };
 }
 
 class CommunibaseError extends Error {
@@ -100,7 +101,7 @@ class CommunibaseError extends Error {
  * @param key - The communibase api key
  * @constructor
  */
-class Connector {
+export class Connector {
   getByIdQueue: {
     [objectType: string]: {
       [objectId: string]: Deferred,
@@ -880,4 +881,4 @@ class Connector {
   }
 }
 
-module.exports = new Connector(process.env.COMMUNIBASE_KEY);
+export default new Connector(process.env.COMMUNIBASE_KEY);

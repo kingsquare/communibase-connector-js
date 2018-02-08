@@ -16,7 +16,7 @@
     "@types/async": "^2.0.47",
     "@types/bluebird": "^3.5.20",
     "@types/lru-cache": "^4.1.0",
-    "@types/node": "^9.4.1",
+    "@types/node": "^8.5.0",
     "@types/socket.io-client": "^1.4.32",
     "@types/winston": "^2.3.7",
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",

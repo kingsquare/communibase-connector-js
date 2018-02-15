@@ -6,7 +6,7 @@ import * as Promise from 'bluebird';
 import async, { AsyncQueue } from 'async';
 import http, { request as httpRequest } from 'http';
 import https, { request as httpsRequest } from 'https';
-import stream from 'stream';
+import { PassThrough } from 'stream';
 import socketIoClient from 'socket.io-client';
 import moment from 'moment';
 import winston from 'winston';
@@ -578,7 +578,7 @@ export class Connector {
    */
   public createReadStream(fileId: string):ReadableStream {
     const request = (this.serviceUrlIsHttps ? httpsRequest : httpRequest);
-    const fileStream = new stream.PassThrough();
+    const fileStream = new PassThrough();
     const req = request(
       `${this.serviceUrl}File.json/binary/${fileId}?api_key=${this.key}`,
       (res: http.IncomingMessage) => {

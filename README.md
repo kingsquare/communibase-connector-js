@@ -17,10 +17,13 @@ Usage
 Make sure environment variable exists with your API-key called COMMUNIBASE_KEY
 
 ```js
-cbc = require('communibase-connector-js');
+const { Connector } = require('communibase-connector-js');
 
-cbc.search('Person', { firstName: 'Tim' }).then(function (peopleCalledTim) {
-	//do something with peopleCalledTim
+const cbc = new Connector(process.env.COMMUNIBASE_KEY);
+
+cbc.search('Person', { firstName: 'Tim' }).then((peopleCalledTim) => {
+  // eslint-disable-next-line no-console
+  console.log(peopleCalledTim.length);
 });
 ```
 

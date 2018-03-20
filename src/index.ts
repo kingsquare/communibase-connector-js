@@ -4,7 +4,7 @@ import 'isomorphic-form-data';
 import ReadableStream = NodeJS.ReadableStream;
 import * as Promise from 'bluebird';
 import async, { AsyncQueue } from 'async';
-import http, { request as httpRequest } from 'http';
+import http, { STATUS_CODES, request as httpRequest } from 'http';
 import https, { request as httpsRequest } from 'https';
 import { PassThrough } from 'stream';
 import socketIoClient from 'socket.io-client';
@@ -586,7 +586,7 @@ export class Connector {
           res.pipe(fileStream);
           return;
         }
-        fileStream.emit('error', new Error(http.STATUS_CODES[res.statusCode]));
+        fileStream.emit('error', new Error(STATUS_CODES[res.statusCode]));
         fileStream.emit('end');
       },
     );

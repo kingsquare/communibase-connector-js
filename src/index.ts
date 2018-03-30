@@ -210,11 +210,11 @@ export class Connector {
     this.serviceUrlIsHttps = (newServiceUrl.indexOf('https') === 0);
   }
 
-  private queueSearch(
+  private queueSearch<T extends CommunibaseDocument = CommunibaseDocument>(
     objectType: CommunibaseEntityType,
     selector: {},
     params?: CommunibaseParams,
-  ): Promise<CommunibaseDocument[]> {
+  ): Promise<T[]> {
     const deferred = defer();
     this.queue.push({
       deferred,
@@ -232,11 +232,11 @@ export class Connector {
    * Bare boned retrieval by objectIds
    * @returns {Promise}
    */
-  private privateGetByIds(
+  private privateGetByIds<T extends CommunibaseDocument = CommunibaseDocument>(
     objectType: CommunibaseEntityType,
     objectIds: string[],
     params?: {},
-  ): Promise<CommunibaseDocument[]> {
+  ): Promise<T[]> {
     return this.queueSearch(
       objectType,
       {
@@ -291,12 +291,12 @@ export class Connector {
    * @param {string|null} [versionId=null] - optional versionId to retrieve
    * @returns {Promise} - for object: a key/value object with object data
    */
-  getById(
+  getById<T extends CommunibaseDocument = CommunibaseDocument>(
     objectType: CommunibaseEntityType,
     objectId: string,
     params?: CommunibaseParams,
     versionId?: string,
-  ): Promise<CommunibaseDocument> {
+  ): Promise<T> {
     if (typeof objectId !== 'string' || objectId.length !== 24) {
       return Promise.reject(new Error('Invalid objectId'));
     }
@@ -319,7 +319,7 @@ export class Connector {
 
     // cached?
     if (this.cache && this.cache.isAvailable(objectType, objectId)) {
-      return this.cache.objectCache[objectType][objectId];
+      return this.cache.objectCache[objectType][objectId] as Promise<T>;
     }
 
     // since we are not requesting a specific version or fields, we may combine the request..?
@@ -359,24 +359,25 @@ export class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  public getByIds(
+  public getByIds<T extends CommunibaseDocument = CommunibaseDocument>(
     objectType: CommunibaseEntityType,
     objectIds: string[],
     params?: CommunibaseParams,
-  ):Promise<CommunibaseDocument[]> {
+  ):Promise<T[]> {
     if (objectIds.length === 0) {
       return Promise.resolve([]);
     }
 
     // not combinable...
     if (params && params.fields) {
-      return this.privateGetByIds(objectType, objectIds, params);
+      return this.privateGetByIds<T>(objectType, objectIds, params);
     }
 
-    return Promise.all(
-      objectIds.map(objectId => this.getById(objectType, objectId, params).reflect()),
+    return Promise.map(
+      objectIds,
+      objectId => this.getById<T>(objectType, objectId, params).reflect(),
     ).then((inspections) => {
-      const result: CommunibaseDocument[] = [];
+      const result: T[] = [];
       let error = null;
       inspections.forEach((inspection) => {
         if (inspection.isRejected()) {
@@ -405,9 +406,10 @@ export class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  public getAll(objectType: CommunibaseEntityType, params?: CommunibaseParams):Promise<CommunibaseDocument[]> {
+  public getAll<T extends CommunibaseDocument = CommunibaseDocument>
+      (objectType: CommunibaseEntityType, params?: CommunibaseParams):Promise<T[]> {
     if (this.cache && !(params && params.fields)) {
-      return this.search(objectType, {}, params);
+      return this.search<T>(objectType, {}, params);
     }
 
     const deferred = defer();
@@ -479,20 +481,20 @@ export class Connector {
    * @param params
    * @returns {Promise} for objects
    */
-  public search(
+  public search<T extends CommunibaseDocument = CommunibaseDocument>(
     objectType: CommunibaseEntityType,
     selector: {},
     params?: CommunibaseParams,
-  ): Promise<CommunibaseDocument[]> {
+  ): Promise<T[]> {
     if (this.cache && !(params && params.fields)) {
-      return this.getIds(objectType, selector, params).then(ids => this.getByIds(objectType, ids));
+      return this.getIds(objectType, selector, params).then(ids => this.getByIds<T>(objectType, ids));
     }
 
     if (selector && (typeof selector === 'object') && Object.keys(selector).length) {
-      return this.queueSearch(objectType, selector, params);
+      return this.queueSearch<T>(objectType, selector, params);
     }
 
-    return this.getAll(objectType, params);
+    return this.getAll<T>(objectType, params);
   }
 
   /**
@@ -502,7 +504,8 @@ export class Connector {
    * @param object - the to-be-saved object data
    * @returns promise for object (the created or updated object)
    */
-  public update(objectType: CommunibaseEntityType, object: CommunibaseDocument): Promise<CommunibaseDocument> {
+  public update<T extends CommunibaseDocument = CommunibaseDocument>
+      (objectType: CommunibaseEntityType, object: T): Promise<T> {
     const deferred = defer();
     const operation = ((object._id && (object._id.length > 0)) ? 'PUT' : 'POST');
 

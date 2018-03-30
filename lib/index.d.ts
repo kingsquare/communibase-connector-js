@@ -49,12 +49,12 @@ export declare class Connector {
     private cache?;
     constructor(key: string);
     setServiceUrl(newServiceUrl: string): void;
-    private queueSearch(objectType, selector, params?);
+    private queueSearch<T>(objectType, selector, params?);
     /**
      * Bare boned retrieval by objectIds
      * @returns {Promise}
      */
-    private privateGetByIds(objectType, objectIds, params?);
+    private privateGetByIds<T>(objectType, objectIds, params?);
     /**
      * Default object retrieval: should provide cachable objects
      */
@@ -68,7 +68,7 @@ export declare class Connector {
      * @param {string|null} [versionId=null] - optional versionId to retrieve
      * @returns {Promise} - for object: a key/value object with object data
      */
-    getById(objectType: CommunibaseEntityType, objectId: string, params?: CommunibaseParams, versionId?: string): Promise<CommunibaseDocument>;
+    getById<T extends CommunibaseDocument = CommunibaseDocument>(objectType: CommunibaseEntityType, objectId: string, params?: CommunibaseParams, versionId?: string): Promise<T>;
     /**
      * Get an array of objects by their ids
      * If one or more entries are found, they are returned as an array of values
@@ -78,7 +78,7 @@ export declare class Connector {
      * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
      * @returns {Promise} - for array of key/value objects
      */
-    getByIds(objectType: CommunibaseEntityType, objectIds: string[], params?: CommunibaseParams): Promise<CommunibaseDocument[]>;
+    getByIds<T extends CommunibaseDocument = CommunibaseDocument>(objectType: CommunibaseEntityType, objectIds: string[], params?: CommunibaseParams): Promise<T[]>;
     /**
      * Get all objects of a certain type
      *
@@ -86,7 +86,7 @@ export declare class Connector {
      * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
      * @returns {Promise} - for array of key/value objects
      */
-    getAll(objectType: CommunibaseEntityType, params?: CommunibaseParams): Promise<CommunibaseDocument[]>;
+    getAll<T extends CommunibaseDocument = CommunibaseDocument>(objectType: CommunibaseEntityType, params?: CommunibaseParams): Promise<T[]>;
     /**
      * Get result objectIds of a certain search
      *
@@ -111,7 +111,7 @@ export declare class Connector {
      * @param params
      * @returns {Promise} for objects
      */
-    search(objectType: CommunibaseEntityType, selector: {}, params?: CommunibaseParams): Promise<CommunibaseDocument[]>;
+    search<T extends CommunibaseDocument = CommunibaseDocument>(objectType: CommunibaseEntityType, selector: {}, params?: CommunibaseParams): Promise<T[]>;
     /**
      * This will save a document in Communibase. When a _id-field is found, this document will be updated
      *
@@ -119,7 +119,7 @@ export declare class Connector {
      * @param object - the to-be-saved object data
      * @returns promise for object (the created or updated object)
      */
-    update(objectType: CommunibaseEntityType, object: CommunibaseDocument): Promise<CommunibaseDocument>;
+    update<T extends CommunibaseDocument = CommunibaseDocument>(objectType: CommunibaseEntityType, object: T): Promise<T>;
     /**
      * Delete something from Communibase
      *

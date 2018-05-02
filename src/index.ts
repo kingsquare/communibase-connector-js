@@ -24,7 +24,7 @@ export type CommunibaseEntityType = 'Person' | 'Membership' | 'Event' | 'Invoice
   | string;
 
 export interface CommunibaseDocument {
-  _id: string;
+  _id?: string;
   [prop: string]: any;
 }
 

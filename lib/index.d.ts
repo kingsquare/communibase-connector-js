@@ -12,7 +12,7 @@ export interface Deferred {
 }
 export declare type CommunibaseEntityType = 'Person' | 'Membership' | 'Event' | 'Invoice' | 'Contact' | 'Debtor' | 'File' | string;
 export interface CommunibaseDocument {
-    _id: string;
+    _id?: string;
     [prop: string]: any;
 }
 export interface CommunibaseDocumentReference {

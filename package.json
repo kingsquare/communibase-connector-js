@@ -8,7 +8,6 @@
     "@types/lru-cache": "^4.1.0",
     "@types/node": "^8.5.0",
     "@types/socket.io-client": "^1.4.32",
-    "@types/winston": "^2.3.9",
     "async": "^2.5.0",
     "bluebird": "^3.5.1",
     "isomorphic-fetch": "^2.2.1",

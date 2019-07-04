@@ -15,7 +15,8 @@
     "lru-cache": "^4.1.2",
     "moment": "^2.22.1",
     "socket.io-client": "^2.1.0",
-    "winston": "^2.4.2"
+    "winston": "^2.4.2",
+    "snyk": "^1.192.0"
   },
   "devDependencies": {
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
@@ -37,7 +38,10 @@
     "node": ">= 8.3.0"
   },
   "scripts": {
-    "test": "mocha --delay --exit"
+    "test": "mocha --delay --exit",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
-  "types": "./lib/index.d.ts"
+  "types": "./lib/index.d.ts",
+  "snyk": true
 }

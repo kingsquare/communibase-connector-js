@@ -1,71 +1,78 @@
-import 'isomorphic-fetch';
-import 'isomorphic-form-data';
+import "isomorphic-fetch";
+import "isomorphic-form-data";
 
 import ReadableStream = NodeJS.ReadableStream;
-import * as Promise from 'bluebird';
-import async, { AsyncQueue } from 'async';
-import http, { STATUS_CODES, request as httpRequest } from 'http';
-import https, { request as httpsRequest } from 'https';
-import { PassThrough } from 'stream';
-import socketIoClient from 'socket.io-client';
-import moment from 'moment';
-import winston from 'winston';
+import async, { AsyncQueue } from "async";
+import * as Promise from "bluebird";
+import http, { request as httpRequest, STATUS_CODES } from "http";
+import https, { request as httpsRequest } from "https";
+import lruCache, { Cache } from "lru-cache";
+import moment from "moment";
+import socketIoClient from "socket.io-client";
+import { PassThrough } from "stream";
+import winston from "winston";
 
-import { getResourceBufferPromise } from './util';
-import lruCache, { Cache } from 'lru-cache';
+import { getResourceBufferPromise } from "./util";
 
-export interface Deferred {
-  resolve: Function;
-  reject: Function;
-  promise: Promise<any>&{metadata?:any};
+export interface IDeferred {
+  resolve: (result:any) => void;
+  reject: (error:Error) => void;
+  promise: Promise<any> & { metadata?: any };
 }
 
-export type CommunibaseEntityType = 'Person' | 'Membership' | 'Event' | 'Invoice' | 'Contact' | 'Debtor' | 'File'
+export type CommunibaseEntityType =
+  | "Person"
+  | "Membership"
+  | "Event"
+  | "Invoice"
+  | "Contact"
+  | "Debtor"
+  | "File"
   | string;
 
-export interface CommunibaseDocument {
+export interface ICommunibaseDocument {
   _id?: string;
   [prop: string]: any;
 }
 
-export interface CommunibaseDocumentReference {
+export interface ICommunibaseDocumentReference {
   rootDocumentEntityType: CommunibaseEntityType;
   rootDocumentId: string;
-  path: {
-    field: string
+  path: Array<{
+    field: string;
     objectId: string;
-  }[];
+  }>;
 }
 
-export interface CommunibaseVersionInformation {
+export interface ICommunibaseVersionInformation {
   _id: string;
   updatedAt: string;
   updatedBy: string;
 }
 
-interface CommunibaseTask {
+interface ICommunibaseTask {
   options: {
     headers?: {
-      Host?: string,
-      'x-api-key'?: string,
-      'x-access-token'?: string,
-      Accept?: string,
-      'Content-Type'?: string,
-    },
+      Host?: string;
+      "x-api-key"?: string;
+      "x-access-token"?: string;
+      Accept?: string;
+      "Content-Type"?: string;
+    };
     query?: {
       [key: string]: string;
-    },
+    };
   };
   url: string;
-  deferred: Deferred;
+  deferred: IDeferred;
 }
 
-export interface CommunibaseParams {
+export interface ICommunibaseParams {
   fields?: string;
   limit?: number;
 }
 
-function defer(): Deferred {
+function defer(): IDeferred {
   let resolve;
   let reject;
   const promise = new Promise((promiseResolve, promiseReject) => {
@@ -75,22 +82,25 @@ function defer(): Deferred {
   return {
     resolve,
     reject,
-    promise,
+    promise
   };
 }
 
 class CommunibaseError extends Error {
-  name: string;
-  code: number;
-  message: string;
-  errors: {};
+  public name: string;
+  public code: number;
+  public message: string;
+  public errors: {};
 
-  constructor(data: { name: string, code: number, message: string, errors: {} }, task: CommunibaseTask) {
+  constructor(
+    data: { name: string; code: number; message: string; errors: {} },
+    task: ICommunibaseTask
+  ) {
     super(data.message);
-    this.name = 'CommunibaseError';
-    this.code = (data.code || 500);
-    this.message = (data.message || '');
-    this.errors = (data.errors || {});
+    this.name = "CommunibaseError";
+    this.code = data.code || 500;
+    this.message = data.message || "";
+    this.errors = data.errors || {};
     // Error.captureStackTrace(this, CommunibaseError);
   }
 }
@@ -101,10 +111,11 @@ class CommunibaseError extends Error {
  * @param key - The communibase api key
  * @constructor
  */
+// tslint:disable-next-line:max-classes-per-file
 export class Connector {
   private getByIdQueue: {
     [objectType: string]: {
-      [objectId: string]: Deferred,
+      [objectId: string]: IDeferred;
     };
   };
   private getByIdPrimed: boolean;
@@ -116,74 +127,86 @@ export class Connector {
   private cache?: {
     objectCache: {
       [objectType: string]: {
-        [objectId: string]: Promise<CommunibaseDocument>,
+        [objectId: string]: Promise<ICommunibaseDocument>;
       };
     };
     aggregateCaches: {
-      [objectType: string]: Cache<string, {}[]>;
+      [objectType: string]: Cache<string, Array<{}>>;
     };
     getIdsCaches: {
       [objectType: string]: Cache<string, string[]>;
     };
-    isAvailable(objectType: CommunibaseEntityType, objectId: string): boolean,
-    dirtySock: SocketIOClient.Socket
+    dirtySock: SocketIOClient.Socket;
+    isAvailable(objectType: CommunibaseEntityType, objectId: string): boolean;
   };
 
   constructor(key: string) {
     this.getByIdQueue = {};
     this.getByIdPrimed = false;
     this.key = key;
-    this.token = '';
-    this.setServiceUrl(process.env.COMMUNIBASE_API_URL || 'https://api.communibase.nl/0.1/');
-    this.queue = async.queue(
-      (task: CommunibaseTask, callback) => {
-        function fail(error: Error): void {
-          if (error instanceof Error) {
-            task.deferred.reject(error);
-          } else {
-            task.deferred.reject(new CommunibaseError(error, task));
-          }
-
-          callback();
-          return null;
+    this.token = "";
+    this.setServiceUrl(
+      process.env.COMMUNIBASE_API_URL || "https://api.communibase.nl/0.1/"
+    );
+    this.queue = async.queue((task: ICommunibaseTask, callback) => {
+      function fail(error: Error): void {
+        if (error instanceof Error) {
+          task.deferred.reject(error);
+        } else {
+          task.deferred.reject(new CommunibaseError(error, task));
         }
 
-        if (!this.key && !this.token) {
-          fail(new Error('Missing key or token for Communibase Connector: please set COMMUNIBASE_KEY environment' +
-            ' variable, or spawn a new instance using require(\'communibase-connector-js\').clone(\'<' +
-            'your api key>\')'));
-          return;
-        }
+        callback();
+        return null;
+      }
 
-        if (!task.options.headers) {
-          task.options.headers = {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          };
-        }
-        if (process.env.COMMUNIBASE_API_HOST) {
-          task.options.headers.Host = process.env.COMMUNIBASE_API_HOST;
-        }
+      if (!this.key && !this.token) {
+        fail(
+          new Error(
+            "Missing key or token for Communibase Connector: please set COMMUNIBASE_KEY environment" +
+              " variable, or spawn a new instance using require('communibase-connector-js').clone('<" +
+              "your api key>')"
+          )
+        );
+        return;
+      }
 
-        if (this.key) {
-          task.options.headers['x-api-key'] = this.key;
-        }
-        if (this.token) {
-          task.options.headers['x-access-token'] = this.token;
-        }
-        // not support by fetch spec / whatwg-fetch
-        if (task.options.query) {
-          task.url += `?${Object.keys(task.options.query).map(
-            queryVar => `${encodeURIComponent(queryVar)}=${encodeURIComponent(task.options.query[queryVar])}`,
-          ).join('&')}`;
-          task.options.query = undefined;
-        }
+      if (!task.options.headers) {
+        task.options.headers = {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        };
+      }
+      if (process.env.COMMUNIBASE_API_HOST) {
+        task.options.headers.Host = process.env.COMMUNIBASE_API_HOST;
+      }
 
-        let success = false;
-        Promise.resolve(fetch(task.url, task.options)).then((response) => {
-          success = (response.status === 200);
+      if (this.key) {
+        task.options.headers["x-api-key"] = this.key;
+      }
+      if (this.token) {
+        task.options.headers["x-access-token"] = this.token;
+      }
+      // not support by fetch spec / whatwg-fetch
+      if (task.options.query) {
+        task.url += `?${Object.keys(task.options.query)
+          .map(
+            queryVar =>
+              `${encodeURIComponent(queryVar)}=${encodeURIComponent(
+                task.options.query[queryVar]
+              )}`
+          )
+          .join("&")}`;
+        task.options.query = undefined;
+      }
+
+      let success = false;
+      Promise.resolve(fetch(task.url, task.options))
+        .then(response => {
+          success = response.status === 200;
           return response.json();
-        }).then((result) => {
+        })
+        .then(result => {
           if (success) {
             const deferred = task.deferred;
             let records = result;
@@ -196,90 +219,17 @@ export class Connector {
             return null;
           }
           throw result;
-        }).catch(fail);
-      },
-      8,
-    );
+        })
+        .catch(fail);
+    }, 8);
   }
 
-  public setServiceUrl(newServiceUrl: string):void {
+  public setServiceUrl(newServiceUrl: string): void {
     if (!newServiceUrl) {
-      throw new Error('Cannot set empty service-url');
+      throw new Error("Cannot set empty service-url");
     }
     this.serviceUrl = newServiceUrl;
-    this.serviceUrlIsHttps = (newServiceUrl.indexOf('https') === 0);
-  }
-
-  private queueSearch<T extends CommunibaseDocument = CommunibaseDocument>(
-    objectType: CommunibaseEntityType,
-    selector: {},
-    params?: CommunibaseParams,
-  ): Promise<T[]> {
-    const deferred = defer();
-    this.queue.push({
-      deferred,
-      url: `${this.serviceUrl + objectType}.json/search`,
-      options: {
-        method: 'POST',
-        body: JSON.stringify(selector),
-        query: params,
-      },
-    });
-    return deferred.promise;
-  }
-
-  /**
-   * Bare boned retrieval by objectIds
-   * @returns {Promise}
-   */
-  private privateGetByIds<T extends CommunibaseDocument = CommunibaseDocument>(
-    objectType: CommunibaseEntityType,
-    objectIds: string[],
-    params?: {},
-  ): Promise<T[]> {
-    return this.queueSearch(
-      objectType,
-      {
-        _id: { $in: objectIds },
-      },
-      params,
-    );
-  }
-
-  /**
-   * Default object retrieval: should provide cachable objects
-   */
-  private spoolQueue():void {
-    Object.keys(this.getByIdQueue).forEach((objectType) => {
-      const deferredsById = this.getByIdQueue[objectType];
-      const objectIds = Object.keys(deferredsById);
-
-      this.getByIdQueue[objectType] = {};
-      this.privateGetByIds(objectType, objectIds).then(
-        (objects) => {
-          const objectHash:{ [key: string]: CommunibaseDocument } = objects.reduce(
-            (previousValue: { [key: string]: CommunibaseDocument }, object) => {
-              previousValue[object._id] = object;
-              return previousValue;
-            },
-            {},
-          );
-          objectIds.forEach((objectId: string) => {
-            if (objectHash[objectId]) {
-              deferredsById[objectId].resolve(objectHash[objectId]);
-              return;
-            }
-            deferredsById[objectId].reject(new Error(`${objectId} is not found`));
-          });
-        },
-        (err) => {
-          objectIds.forEach((objectId) => {
-            deferredsById[objectId].reject(err);
-          });
-        },
-      );
-    });
-    this.getByIdPrimed = false;
+    this.serviceUrlIsHttps = newServiceUrl.indexOf("https") === 0;
   }
 
   /**
@@ -291,14 +241,14 @@ export class Connector {
    * @param {string|null} [versionId=null] - optional versionId to retrieve
    * @returns {Promise} - for object: a key/value object with object data
    */
-  getById<T extends CommunibaseDocument = CommunibaseDocument>(
+  public getById<T extends ICommunibaseDocument = ICommunibaseDocument>(
     objectType: CommunibaseEntityType,
     objectId: string,
-    params?: CommunibaseParams,
-    versionId?: string,
+    params?: ICommunibaseParams,
+    versionId?: string
   ): Promise<T> {
-    if (typeof objectId !== 'string' || objectId.length !== 24) {
-      return Promise.reject(new Error('Invalid objectId'));
+    if (typeof objectId !== "string" || objectId.length !== 24) {
+      return Promise.reject(new Error("Invalid objectId"));
     }
 
     // not combinable...
@@ -306,13 +256,13 @@ export class Connector {
       const deferred = defer();
       this.queue.push({
         deferred,
-        url: `${this.serviceUrl + objectType}.json/${versionId ?
-          `history/${objectId}/${versionId}` :
-          `crud/${objectId}`}`,
+        url: `${this.serviceUrl + objectType}.json/${
+          versionId ? `history/${objectId}/${versionId}` : `crud/${objectId}`
+        }`,
         options: {
-          method: 'GET',
-          query: params,
-        },
+          method: "GET",
+          query: params
+        }
       });
       return deferred.promise;
     }
@@ -338,7 +288,9 @@ export class Connector {
       if (this.cache.objectCache[objectType] === undefined) {
         this.cache.objectCache[objectType] = {};
       }
-      this.cache.objectCache[objectType][objectId] = this.getByIdQueue[objectType][objectId].promise;
+      this.cache.objectCache[objectType][objectId] = this.getByIdQueue[
+        objectType
+      ][objectId].promise;
     }
 
     if (!this.getByIdPrimed) {
@@ -359,11 +311,11 @@ export class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  public getByIds<T extends CommunibaseDocument = CommunibaseDocument>(
+  public getByIds<T extends ICommunibaseDocument = ICommunibaseDocument>(
     objectType: CommunibaseEntityType,
     objectIds: string[],
-    params?: CommunibaseParams,
-  ):Promise<T[]> {
+    params?: ICommunibaseParams
+  ): Promise<T[]> {
     if (objectIds.length === 0) {
       return Promise.resolve([]);
     }
@@ -373,13 +325,12 @@ export class Connector {
       return this.privateGetByIds<T>(objectType, objectIds, params);
     }
 
-    return Promise.map(
-      objectIds,
-      objectId => this.getById<T>(objectType, objectId, params).reflect(),
-    ).then((inspections) => {
+    return Promise.map(objectIds, objectId =>
+      this.getById<T>(objectType, objectId, params).reflect()
+    ).then(inspections => {
       const result: T[] = [];
       let error = null;
-      inspections.forEach((inspection) => {
+      inspections.forEach(inspection => {
         if (inspection.isRejected()) {
           error = inspection.reason();
           return;
@@ -406,8 +357,10 @@ export class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  public getAll<T extends CommunibaseDocument = CommunibaseDocument>
-      (objectType: CommunibaseEntityType, params?: CommunibaseParams):Promise<T[]> {
+  public getAll<T extends ICommunibaseDocument = ICommunibaseDocument>(
+    objectType: CommunibaseEntityType,
+    params?: ICommunibaseParams
+  ): Promise<T[]> {
     if (this.cache && !(params && params.fields)) {
       return this.search<T>(objectType, {}, params);
     }
@@ -417,9 +370,9 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl + objectType}.json/crud`,
       options: {
-        method: 'GET',
-        query: params,
-      },
+        method: "GET",
+        query: params
+      }
     });
     return deferred.promise;
   }
@@ -432,7 +385,11 @@ export class Connector {
    * @param {object} [params={}] - key/value store for extra arguments like fields, limit, page and/or sort
    * @returns {Promise} - for array of key/value objects
    */
-  public getIds(objectType: CommunibaseEntityType, selector?: {}, params?: CommunibaseParams):Promise<string[]> {
+  public getIds(
+    objectType: CommunibaseEntityType,
+    selector?: {},
+    params?: ICommunibaseParams
+  ): Promise<string[]> {
     let hash: string;
     let result;
 
@@ -450,11 +407,11 @@ export class Connector {
     const resultPromise = this.search(
       objectType,
       selector,
-      Object.assign({ fields: '_id' }, params),
+      { fields: "_id", ...params}
     ).then(results => results.map(obj => obj._id));
 
     if (this.cache) {
-      return resultPromise.then((ids) => {
+      return resultPromise.then(ids => {
         this.cache.getIdsCaches[objectType].set(hash, ids);
         return ids;
       });
@@ -470,8 +427,13 @@ export class Connector {
    * @param {object} selector - { firstName: "Henk" }
    * @returns {Promise} - for a string OR undefined if not found
    */
-  public getId(objectType: CommunibaseEntityType, selector?: {}) : Promise<string> {
-    return this.getIds(objectType, selector, { limit: 1 }).then(ids => ids.pop());
+  public getId(
+    objectType: CommunibaseEntityType,
+    selector?: {}
+  ): Promise<string> {
+    return this.getIds(objectType, selector, { limit: 1 }).then(ids =>
+      ids.pop()
+    );
   }
 
   /**
@@ -481,16 +443,22 @@ export class Connector {
    * @param params
    * @returns {Promise} for objects
    */
-  public search<T extends CommunibaseDocument = CommunibaseDocument>(
+  public search<T extends ICommunibaseDocument = ICommunibaseDocument>(
     objectType: CommunibaseEntityType,
     selector: {},
-    params?: CommunibaseParams,
+    params?: ICommunibaseParams
   ): Promise<T[]> {
     if (this.cache && !(params && params.fields)) {
-      return this.getIds(objectType, selector, params).then(ids => this.getByIds<T>(objectType, ids));
+      return this.getIds(objectType, selector, params).then(ids =>
+        this.getByIds<T>(objectType, ids)
+      );
     }
 
-    if (selector && (typeof selector === 'object') && Object.keys(selector).length) {
+    if (
+      selector &&
+      typeof selector === "object" &&
+      Object.keys(selector).length
+    ) {
       return this.queueSearch<T>(objectType, selector, params);
     }
 
@@ -504,23 +472,32 @@ export class Connector {
    * @param object - the to-be-saved object data
    * @returns promise for object (the created or updated object)
    */
-  public update<T extends CommunibaseDocument = CommunibaseDocument>
-      (objectType: CommunibaseEntityType, object: T): Promise<T> {
+  public update<T extends ICommunibaseDocument = ICommunibaseDocument>(
+    objectType: CommunibaseEntityType,
+    object: T
+  ): Promise<T> {
     const deferred = defer();
-    const operation = ((object._id && (object._id.length > 0)) ? 'PUT' : 'POST');
+    const operation = object._id && object._id.length > 0 ? "PUT" : "POST";
 
-    if (object._id && this.cache && this.cache.objectCache && this.cache.objectCache[objectType] &&
-      this.cache.objectCache[objectType][object._id]) {
+    if (
+      object._id &&
+      this.cache &&
+      this.cache.objectCache &&
+      this.cache.objectCache[objectType] &&
+      this.cache.objectCache[objectType][object._id]
+    ) {
       this.cache.objectCache[objectType][object._id] = null;
     }
 
     this.queue.push({
       deferred,
-      url: `${this.serviceUrl + objectType}.json/crud${(operation === 'PUT') ? `/${object._id}` : ''}`,
+      url: `${this.serviceUrl + objectType}.json/crud${
+        operation === "PUT" ? `/${object._id}` : ""
+      }`,
       options: {
         method: operation,
-        body: JSON.stringify(object),
-      },
+        body: JSON.stringify(object)
+      }
     });
 
     return deferred.promise;
@@ -533,11 +510,18 @@ export class Connector {
    * @param objectId
    * @returns promise (for null)
    */
-  public destroy(objectType: CommunibaseEntityType, objectId: string):Promise<null> {
+  public destroy(
+    objectType: CommunibaseEntityType,
+    objectId: string
+  ): Promise<null> {
     const deferred = defer();
 
-    if (this.cache && this.cache.objectCache && this.cache.objectCache[objectType] &&
-      this.cache.objectCache[objectType][objectId]) {
+    if (
+      this.cache &&
+      this.cache.objectCache &&
+      this.cache.objectCache[objectType] &&
+      this.cache.objectCache[objectType][objectId]
+    ) {
       this.cache.objectCache[objectType][objectId] = null;
     }
 
@@ -545,8 +529,8 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl + objectType}.json/crud/${objectId}`,
       options: {
-        method: 'DELETE',
-      },
+        method: "DELETE"
+      }
     });
 
     return deferred.promise;
@@ -559,15 +543,18 @@ export class Connector {
    * @param objectId
    * @returns promise (for null)
    */
-  public undelete(objectType: CommunibaseEntityType, objectId: string):Promise<CommunibaseDocument> {
+  public undelete(
+    objectType: CommunibaseEntityType,
+    objectId: string
+  ): Promise<ICommunibaseDocument> {
     const deferred = defer();
 
     this.queue.push({
       deferred,
       url: `${this.serviceUrl + objectType}.json/history/undelete/${objectId}`,
       options: {
-        method: 'POST',
-      },
+        method: "POST"
+      }
     });
 
     return deferred.promise;
@@ -579,8 +566,8 @@ export class Connector {
    * @param fileId
    * @returns {Stream} see http://nodejs.org/api/stream.html#stream_stream
    */
-  public createReadStream(fileId: string):ReadableStream {
-    const request = (this.serviceUrlIsHttps ? httpsRequest : httpRequest);
+  public createReadStream(fileId: string): ReadableStream {
+    const request = this.serviceUrlIsHttps ? httpsRequest : httpRequest;
     const fileStream = new PassThrough();
     const req = request(
       `${this.serviceUrl}File.json/binary/${fileId}?api_key=${this.key}`,
@@ -589,16 +576,16 @@ export class Connector {
           res.pipe(fileStream);
           return;
         }
-        fileStream.emit('error', new Error(STATUS_CODES[res.statusCode]));
-        fileStream.emit('end');
-      },
+        fileStream.emit("error", new Error(STATUS_CODES[res.statusCode]));
+        fileStream.emit("end");
+      }
     );
     if (process.env.COMMUNIBASE_API_HOST) {
-      req.setHeader('Host', process.env.COMMUNIBASE_API_HOST);
+      req.setHeader("Host", process.env.COMMUNIBASE_API_HOST);
     }
     req.end();
-    req.on('error', (err:Error) => {
-      fileStream.emit('error', err);
+    req.on("error", (err: Error) => {
+      fileStream.emit("error", err);
     });
     return fileStream;
   }
@@ -616,53 +603,54 @@ export class Connector {
    * @returns {Promise}
    */
   public updateBinary(
-    resource:ReadableStream|Buffer|string,
-    name:string,
-    destinationPath:string,
-    id:string,
-  ):Promise<CommunibaseDocument> {
+    resource: ReadableStream | Buffer | string,
+    name: string,
+    destinationPath: string,
+    id?: string
+  ): Promise<ICommunibaseDocument> {
     const metaData = {
-      path: destinationPath,
+      path: destinationPath
     };
 
-    return getResourceBufferPromise(resource).then((buffer:any) => {
-      if (id) { // TODO check is valid id? entails extra dependency (mongodb.ObjectID)
+    return getResourceBufferPromise(resource).then((buffer: any) => {
+      if (id) {
+        // TODO check is valid id? entails extra dependency (mongodb.ObjectID)
         // update File identified by id
-        return this.update('File', {
+        return this.update("File", {
           _id: id,
           filename: name,
           length: buffer.length,
           uploadDate: moment().format(),
           metadata: metaData,
-          content: buffer,
+          content: buffer
         });
       }
 
       // create a new File
       const deferred = defer();
-      const formData:FormData = new FormData();
-      let stringOrBlob:string|Blob = buffer;
+      const formData: FormData = new FormData();
+      let stringOrBlob: string | Blob = buffer;
 
       // @see https://developer.mozilla.org/en-US/docs/Web/API/FormData/append
       // officially, formdata may contain blobs or strings. node doesn't do blobs, but when polymorphing in a browser we
       // may cast it to one for it to work properly...
-      if (typeof window !== 'undefined' && window.Blob) {
+      if (typeof window !== "undefined" && window.Blob) {
         stringOrBlob = new Blob([buffer]);
       }
 
-      formData.append('File', stringOrBlob, name);
-      formData.append('metadata', JSON.stringify(metaData));
+      formData.append("File", stringOrBlob, name);
+      formData.append("metadata", JSON.stringify(metaData));
 
       this.queue.push({
         deferred,
         url: `${this.serviceUrl}File.json/binary`,
         options: {
-          method: 'POST',
+          method: "POST",
           body: formData,
           headers: {
-            Accept: 'application/json',
-          },
-        },
+            Accept: "application/json"
+          }
+        }
       });
       return deferred.promise;
     });
@@ -674,7 +662,7 @@ export class Connector {
    * @param apiKey
    * @returns {Connector}
    */
-  public clone(apiKey: string):Connector {
+  public clone(apiKey: string): Connector {
     return new Connector(apiKey);
   }
 
@@ -691,14 +679,17 @@ export class Connector {
    * @param {string} objectId
    * @returns promise for VersionInformation[]
    */
-  public getHistory(objectType:CommunibaseEntityType, objectId: string):Promise<CommunibaseVersionInformation[]> {
+  public getHistory(
+    objectType: CommunibaseEntityType,
+    objectId: string
+  ): Promise<ICommunibaseVersionInformation[]> {
     const deferred = defer();
     this.queue.push({
       deferred,
       url: `${this.serviceUrl + objectType}.json/history/${objectId}`,
       options: {
-        method: 'GET',
-      },
+        method: "GET"
+      }
     });
     return deferred.promise;
   }
@@ -709,15 +700,18 @@ export class Connector {
    * @param {Object} selector
    * @returns promise for VersionInformation[]
    */
-  public historySearch(objectType: CommunibaseEntityType, selector: {}):Promise<CommunibaseVersionInformation[]> {
+  public historySearch(
+    objectType: CommunibaseEntityType,
+    selector: {}
+  ): Promise<ICommunibaseVersionInformation[]> {
     const deferred = defer();
     this.queue.push({
       deferred,
       url: `${this.serviceUrl + objectType}.json/history/search`,
       options: {
-        method: 'POST',
-        body: JSON.stringify(selector),
-      },
+        method: "POST",
+        body: JSON.stringify(selector)
+      }
     });
     return deferred.promise;
   }
@@ -739,15 +733,31 @@ export class Connector {
    * @param {object} parentDocument
    * @return {Promise} for referred object
    */
-  public getByRef(ref: CommunibaseDocumentReference, parentDocument: CommunibaseDocument):Promise<CommunibaseDocument> {
-    if (!(ref && ref.rootDocumentEntityType && (ref.rootDocumentId || parentDocument))) {
-      return Promise.reject(new Error('Please provide a documentReference object with a type and id'));
+  public getByRef(
+    ref: ICommunibaseDocumentReference,
+    parentDocument: ICommunibaseDocument
+  ): Promise<ICommunibaseDocument> {
+    if (
+      !(
+        ref &&
+        ref.rootDocumentEntityType &&
+        (ref.rootDocumentId || parentDocument)
+      )
+    ) {
+      return Promise.reject(
+        new Error(
+          "Please provide a documentReference object with a type and id"
+        )
+      );
     }
 
-    const rootDocumentEntityTypeParts = ref.rootDocumentEntityType.split('.');
+    const rootDocumentEntityTypeParts = ref.rootDocumentEntityType.split(".");
     let parentDocumentPromise;
-    if (rootDocumentEntityTypeParts[0] !== 'parent') {
-      parentDocumentPromise = this.getById(ref.rootDocumentEntityType, ref.rootDocumentId);
+    if (rootDocumentEntityTypeParts[0] !== "parent") {
+      parentDocumentPromise = this.getById(
+        ref.rootDocumentEntityType,
+        ref.rootDocumentId
+      );
     } else {
       parentDocumentPromise = Promise.resolve(parentDocument);
     }
@@ -757,16 +767,20 @@ export class Connector {
     }
 
     /* tslint:disable no-parameter-reassignment */
-    return parentDocumentPromise.then((result: CommunibaseDocument) => {
-      ref.path.some((pathNibble) => {
+    return parentDocumentPromise.then((result: ICommunibaseDocument) => {
+      ref.path.some(pathNibble => {
         if (result[pathNibble.field]) {
-          if (!result[pathNibble.field].some((subDocument:CommunibaseDocument) => {
-            if (subDocument._id === pathNibble.objectId) {
-              result = subDocument;
-              return true;
-            }
-            return false;
-          })) {
+          if (
+            !result[pathNibble.field].some(
+              (subDocument: ICommunibaseDocument) => {
+                if (subDocument._id === pathNibble.objectId) {
+                  result = subDocument;
+                  return true;
+                }
+                return false;
+              }
+            )
+          ) {
             result = null;
             return true;
           }
@@ -778,7 +792,9 @@ export class Connector {
       if (result) {
         return result;
       }
-      throw new Error('The referred object within it\'s parent could not be found');
+      throw new Error(
+        "The referred object within it's parent could not be found"
+      );
     });
     /* tslint:enable no-parameter-reassignment */
   }
@@ -795,12 +811,17 @@ export class Connector {
    * { "$group": { "_id": "$_id", "participantCount": { "$sum": 1 } } }
    * ]
    */
-  public aggregate(objectType:CommunibaseEntityType, aggregationPipeline:{}[]):Promise<{}[]> {
+  public aggregate(
+    objectType: CommunibaseEntityType,
+    aggregationPipeline: Array<{}>
+  ): Promise<Array<{}>> {
     if (!aggregationPipeline || !aggregationPipeline.length) {
-      return Promise.reject(new Error('Please provide a valid Aggregation Pipeline.'));
+      return Promise.reject(
+        new Error("Please provide a valid Aggregation Pipeline.")
+      );
     }
 
-    let hash:string;
+    let hash: string;
     if (this.cache) {
       hash = JSON.stringify([objectType, aggregationPipeline]);
       if (!this.cache.aggregateCaches[objectType]) {
@@ -817,15 +838,15 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl + objectType}.json/aggregate`,
       options: {
-        method: 'POST',
-        body: JSON.stringify(aggregationPipeline),
-      },
+        method: "POST",
+        body: JSON.stringify(aggregationPipeline)
+      }
     });
 
     const resultPromise = deferred.promise;
 
     if (this.cache) {
-      return resultPromise.then((result) => {
+      return resultPromise.then(result => {
         this.cache.aggregateCaches[objectType].set(hash, result);
         return result;
       });
@@ -840,14 +861,14 @@ export class Connector {
    * @param invoiceId
    * @returns {*}
    */
-  public finalizeInvoice(invoiceId:string) : Promise<CommunibaseDocument> {
+  public finalizeInvoice(invoiceId: string): Promise<ICommunibaseDocument> {
     const deferred = defer();
     this.queue.push({
       deferred,
       url: `${this.serviceUrl}Invoice.json/finalize/${invoiceId}`,
       options: {
-        method: 'POST',
-      },
+        method: "POST"
+      }
     });
     return deferred.promise;
   }
@@ -856,31 +877,113 @@ export class Connector {
    * @param communibaseAdministrationId
    * @param socketServiceUrl
    */
-  public enableCache(communibaseAdministrationId: string, socketServiceUrl: string):void {
+  public enableCache(
+    communibaseAdministrationId: string,
+    socketServiceUrl: string
+  ): void {
     this.cache = {
       getIdsCaches: {},
       aggregateCaches: {},
-      dirtySock: socketIoClient.connect(socketServiceUrl, { port: '443' }),
+      dirtySock: socketIoClient.connect(socketServiceUrl, { port: "443" }),
       objectCache: {},
       isAvailable(objectType, objectId) {
-        return this.cache.objectCache[objectType] && this.cache.objectCache[objectType][objectId];
-      },
+        return (
+          this.cache.objectCache[objectType] &&
+          this.cache.objectCache[objectType][objectId]
+        );
+      }
     };
-    this.cache.dirtySock.on('connect', () => {
-      this.cache.dirtySock.emit('join', `${communibaseAdministrationId}_dirty`);
+    this.cache.dirtySock.on("connect", () => {
+      this.cache.dirtySock.emit("join", `${communibaseAdministrationId}_dirty`);
     });
-    this.cache.dirtySock.on('message', (dirtyness:string) => {
-      const dirtyInfo = dirtyness.split('|');
+    this.cache.dirtySock.on("message", (dirtyness: string) => {
+      const dirtyInfo = dirtyness.split("|");
       if (dirtyInfo.length !== 2) {
         winston.warn(`${new Date()}: Got weird dirty sock data? ${dirtyness}`);
         return;
       }
       this.cache.getIdsCaches[dirtyInfo[0]] = null;
       this.cache.aggregateCaches[dirtyInfo[0]] = null;
-      if ((dirtyInfo.length === 2) && this.cache.objectCache[dirtyInfo[0]]) {
+      if (dirtyInfo.length === 2 && this.cache.objectCache[dirtyInfo[0]]) {
         this.cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
       }
     });
+  }
+
+  private queueSearch<T extends ICommunibaseDocument = ICommunibaseDocument>(
+    objectType: CommunibaseEntityType,
+    selector: {},
+    params?: ICommunibaseParams
+  ): Promise<T[]> {
+    const deferred = defer();
+    this.queue.push({
+      deferred,
+      url: `${this.serviceUrl + objectType}.json/search`,
+      options: {
+        method: "POST",
+        body: JSON.stringify(selector),
+        query: params
+      }
+    });
+    return deferred.promise;
+  }
+
+  /**
+   * Bare boned retrieval by objectIds
+   * @returns {Promise}
+   */
+  private privateGetByIds<T extends ICommunibaseDocument = ICommunibaseDocument>(
+    objectType: CommunibaseEntityType,
+    objectIds: string[],
+    params?: {}
+  ): Promise<T[]> {
+    return this.queueSearch(
+      objectType,
+      {
+        _id: { $in: objectIds }
+      },
+      params
+    );
+  }
+
+  /**
+   * Default object retrieval: should provide cachable objects
+   */
+  private spoolQueue(): void {
+    Object.keys(this.getByIdQueue).forEach(objectType => {
+      const deferredsById = this.getByIdQueue[objectType];
+      const objectIds = Object.keys(deferredsById);
+
+      this.getByIdQueue[objectType] = {};
+      this.privateGetByIds(objectType, objectIds).then(
+        objects => {
+          const objectHash: {
+            [key: string]: ICommunibaseDocument;
+          } = objects.reduce(
+            (previousValue: { [key: string]: ICommunibaseDocument }, object) => {
+              previousValue[object._id] = object;
+              return previousValue;
+            },
+            {}
+          );
+          objectIds.forEach((objectId: string) => {
+            if (objectHash[objectId]) {
+              deferredsById[objectId].resolve(objectHash[objectId]);
+              return;
+            }
+            deferredsById[objectId].reject(
+              new Error(`${objectId} is not found`)
+            );
+          });
+        },
+        err => {
+          objectIds.forEach(objectId => {
+            deferredsById[objectId].reject(err);
+          });
+        }
+      );
+    });
+    this.getByIdPrimed = false;
   }
 }
 

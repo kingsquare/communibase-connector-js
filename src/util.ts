@@ -6,20 +6,21 @@
  * @returns {Promise}
  */
 import ReadableStream = NodeJS.ReadableStream;
-import * as Promise from 'bluebird';
+import * as Promise from "bluebird";
 
-export const streamPromise = (stream:ReadableStream) => new Promise((resolve, reject) => {
-  const buffer:Buffer[] = [];
-  stream.on('data', (data) => {
-    buffer.push(data);
+export const streamPromise = (stream: ReadableStream) =>
+  new Promise((resolve, reject) => {
+    const buffer: Buffer[] = [];
+    stream.on("data", data => {
+      buffer.push(data);
+    });
+    stream.on("end", () => {
+      resolve(Buffer.concat(buffer));
+    });
+    stream.on("error", err => {
+      reject(err);
+    });
   });
-  stream.on('end', () => {
-    resolve(Buffer.concat(buffer));
-  });
-  stream.on('error', (err) => {
-    reject(err);
-  });
-});
 
 /**
  * Returns a given resource as a Buffer (promise)
@@ -28,9 +29,11 @@ export const streamPromise = (stream:ReadableStream) => new Promise((resolve, re
  *
  * @returns {Promise}
  */
-export function getResourceBufferPromise(resource:ReadableStream|Buffer|string):Promise<Buffer> {
+export function getResourceBufferPromise(
+  resource: ReadableStream | Buffer | string
+): Promise<Buffer> {
   // might be a string
-  if (typeof resource === 'string') {
+  if (typeof resource === "string") {
     return Promise.resolve(new Buffer(resource));
   }
 

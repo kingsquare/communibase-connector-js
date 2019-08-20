@@ -35,7 +35,7 @@
   "browser": {},
   "main": "lib/index.js",
   "engines": {
-    "node": ">= 8.3.0"
+    "node": "^10.15.3"
   },
   "scripts": {
     "prepublishOnly": "./node_modules/.bin/tsc",

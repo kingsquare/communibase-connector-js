@@ -233,6 +233,13 @@ export class Connector {
   }
 
   /**
+   * Return the configured service url
+   */
+  public getServiceUrl() {
+    return this.serviceUrl;
+  };
+
+  /**
    * Get a single object by its id
    *
    * @param {string} objectType - E.g. Person

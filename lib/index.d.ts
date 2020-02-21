@@ -44,13 +44,13 @@ export interface ICommunibaseParams {
 export declare class Connector {
     private getByIdQueue;
     private getByIdPrimed;
-    private key;
+    private key?;
     private token;
     private serviceUrl;
     private serviceUrlIsHttps;
     private queue;
     private cache?;
-    constructor(key: string);
+    constructor(key?: string);
     setServiceUrl(newServiceUrl: string): void;
     /**
      * Get a single object by its id
@@ -96,7 +96,7 @@ export declare class Connector {
      * @param {object} selector - { firstName: "Henk" }
      * @returns {Promise} - for a string OR undefined if not found
      */
-    getId(objectType: CommunibaseEntityType, selector?: {}): Promise<string>;
+    getId(objectType: CommunibaseEntityType, selector?: {}): Promise<string | null>;
     /**
      *
      * @param objectType

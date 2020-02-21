@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import async, { AsyncQueue } from "async";
 import * as Promise from "bluebird";
 import http, { request as httpRequest, STATUS_CODES } from "http";
@@ -81,7 +81,9 @@ function defer(): IDeferred {
     reject = promiseReject;
   });
   return {
+    // @ts-ignore
     resolve,
+    // @ts-ignore
     reject,
     promise
   };
@@ -120,7 +122,7 @@ export class Connector {
     };
   };
   private getByIdPrimed: boolean;
-  private key: string;
+  private key?: string;
   private token: string;
   private serviceUrl: string;
   private serviceUrlIsHttps: boolean;
@@ -128,27 +130,27 @@ export class Connector {
   private cache?: {
     objectCache: {
       [objectType: string]: {
-        [objectId: string]: Promise<ICommunibaseDocument>;
+        [objectId: string]: null | Promise<ICommunibaseDocument>;
       };
     };
     aggregateCaches: {
-      [objectType: string]: Cache<string, Array<{}>>;
+      [objectType: string]: null | Cache<string, Array<{}>>;
     };
     getIdsCaches: {
-      [objectType: string]: Cache<string, string[]>;
+      [objectType: string]: null | Cache<string, string[]>;
     };
     dirtySock: SocketIOClient.Socket;
     isAvailable(objectType: CommunibaseEntityType, objectId: string): boolean;
   };
 
-  constructor(key: string) {
+  constructor(key?: string) {
     this.getByIdQueue = {};
     this.getByIdPrimed = false;
     this.key = key;
     this.token = "";
-    this.setServiceUrl(
-      process.env.COMMUNIBASE_API_URL || "https://api.communibase.nl/0.1/"
-    );
+    this.serviceUrl =
+      process.env.COMMUNIBASE_API_URL || "https://api.communibase.nl/0.1/";
+    this.serviceUrlIsHttps = this.serviceUrl.indexOf("https") === 0;
     this.queue = async.queue((task: ICommunibaseTask, callback) => {
       function fail(error: Error): void {
         if (error instanceof Error) {
@@ -158,7 +160,7 @@ export class Connector {
         }
 
         callback();
-        return null;
+        return;
       }
 
       if (!this.key && !this.token) {
@@ -206,8 +208,8 @@ export class Connector {
           callback();
           return null;
         })
-        .catch(err => {
-          fail(err.response.data || err);
+        .catch((err: AxiosError) => {
+          fail(err.response?.data || err);
         });
     }, 8);
   }
@@ -386,20 +388,26 @@ export class Connector {
       if (!this.cache.getIdsCaches[objectType]) {
         this.cache.getIdsCaches[objectType] = new lruCache(1000); // 1000 getIds are this.cached, per entityType
       }
-      result = this.cache.getIdsCaches[objectType].get(hash);
+      const objectTypeGetIdCache = this.cache.getIdsCaches[objectType];
+      result = objectTypeGetIdCache ? objectTypeGetIdCache.get(hash) : null;
       if (result) {
         return Promise.resolve(result);
       }
     }
 
-    const resultPromise = this.search(objectType, selector, {
+    const resultPromise = this.search(objectType, selector || {}, {
       fields: "_id",
       ...params
-    }).then(results => results.map(obj => obj._id));
+    }).then(results => results.map(obj => obj._id as string));
 
     if (this.cache) {
       return resultPromise.then(ids => {
-        this.cache.getIdsCaches[objectType].set(hash, ids);
+        if (this.cache) {
+          const objectTypeGetIdCache = this.cache.getIdsCaches[objectType];
+          if (objectTypeGetIdCache) {
+            objectTypeGetIdCache.set(hash, ids);
+          }
+        }
         return ids;
       });
     }
@@ -417,9 +425,9 @@ export class Connector {
   public getId(
     objectType: CommunibaseEntityType,
     selector?: {}
-  ): Promise<string> {
-    return this.getIds(objectType, selector, { limit: 1 }).then(ids =>
-      ids.pop()
+  ): Promise<string | null> {
+    return this.getIds(objectType, selector, { limit: 1 }).then(
+      ids => ids.pop() || null
     );
   }
 
@@ -563,7 +571,10 @@ export class Connector {
           res.pipe(fileStream);
           return;
         }
-        fileStream.emit("error", new Error(STATUS_CODES[res.statusCode]));
+        fileStream.emit(
+          "error",
+          new Error(STATUS_CODES[res.statusCode || 500])
+        );
         fileStream.emit("end");
       }
     );
@@ -754,9 +765,9 @@ export class Connector {
     }
 
     /* tslint:disable no-parameter-reassignment */
-    return parentDocumentPromise.then((result: ICommunibaseDocument) => {
+    return parentDocumentPromise.then((result: ICommunibaseDocument | null) => {
       ref.path.some(pathNibble => {
-        if (result[pathNibble.field]) {
+        if (result && result[pathNibble.field]) {
           if (
             !result[pathNibble.field].some(
               (subDocument: ICommunibaseDocument) => {
@@ -811,10 +822,12 @@ export class Connector {
     let hash: string;
     if (this.cache) {
       hash = JSON.stringify([objectType, aggregationPipeline]);
-      if (!this.cache.aggregateCaches[objectType]) {
-        this.cache.aggregateCaches[objectType] = lruCache(1000); // 1000 getIds are this.cached, per entityType
+      let objectTypeAggregateCache = this.cache.aggregateCaches[objectType];
+      if (!objectTypeAggregateCache) {
+        objectTypeAggregateCache = lruCache(1000); // // 1000 getIds are this.cached, per entityType
+        this.cache.aggregateCaches[objectType] = objectTypeAggregateCache;
       }
-      const result = this.cache.aggregateCaches[objectType].get(hash);
+      const result = objectTypeAggregateCache.get(hash);
       if (result) {
         return Promise.resolve(result);
       }
@@ -834,7 +847,14 @@ export class Connector {
 
     if (this.cache) {
       return resultPromise.then(result => {
-        this.cache.aggregateCaches[objectType].set(hash, result);
+        if (this.cache) {
+          const objectTypeAggregateCache = this.cache.aggregateCaches[
+            objectType
+          ];
+          if (objectTypeAggregateCache) {
+            objectTypeAggregateCache.set(hash, result);
+          }
+        }
         return result;
       });
     }
@@ -873,26 +893,30 @@ export class Connector {
       aggregateCaches: {},
       dirtySock: socketIoClient.connect(socketServiceUrl, { port: "443" }),
       objectCache: {},
-      isAvailable(objectType, objectId) {
-        return (
-          this.cache.objectCache[objectType] &&
-          this.cache.objectCache[objectType][objectId]
+      isAvailable(objectType, objectId): boolean {
+        if (!cache) {
+          return false;
+        }
+        return !!(
+          cache.objectCache[objectType] &&
+          cache.objectCache[objectType][objectId]
         );
       }
     };
-    this.cache.dirtySock.on("connect", () => {
-      this.cache.dirtySock.emit("join", `${communibaseAdministrationId}_dirty`);
+    const { cache } = this;
+    cache.dirtySock.on("connect", () => {
+      cache.dirtySock.emit("join", `${communibaseAdministrationId}_dirty`);
     });
-    this.cache.dirtySock.on("message", (dirtyness: string) => {
+    cache.dirtySock.on("message", (dirtyness: string) => {
       const dirtyInfo = dirtyness.split("|");
       if (dirtyInfo.length !== 2) {
         winston.warn(`${new Date()}: Got weird dirty sock data? ${dirtyness}`);
         return;
       }
-      this.cache.getIdsCaches[dirtyInfo[0]] = null;
-      this.cache.aggregateCaches[dirtyInfo[0]] = null;
-      if (dirtyInfo.length === 2 && this.cache.objectCache[dirtyInfo[0]]) {
-        this.cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
+      cache.getIdsCaches[dirtyInfo[0]] = null;
+      cache.aggregateCaches[dirtyInfo[0]] = null;
+      if (dirtyInfo.length === 2 && cache.objectCache[dirtyInfo[0]]) {
+        cache.objectCache[dirtyInfo[0]][dirtyInfo[1]] = null;
       }
     });
   }
@@ -953,7 +977,9 @@ export class Connector {
               previousValue: { [key: string]: ICommunibaseDocument },
               object
             ) => {
-              previousValue[object._id] = object;
+              if (object._id) {
+                previousValue[object._id] = object;
+              }
               return previousValue;
             },
             {}

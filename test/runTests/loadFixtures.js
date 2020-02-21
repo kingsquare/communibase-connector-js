@@ -43,7 +43,6 @@ module.exports = function() {
     cbc.update("Event", eventData)
   ])
     .spread((person, company, group, event) => {
-      console.log(person);
       debtorData.personId = person._id;
       debtorData.companyId = company._id;
       debtor2Data.personId = person._id;

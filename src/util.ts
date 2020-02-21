@@ -42,6 +42,7 @@ export function getResourceBufferPromise(
     return Promise.resolve(resource);
   }
   // probably a stream
-  // TODO npe/type check
+  // @TODO npe/type check
+  // @ts-ignore
   return this.streamPromise(resource);
 }

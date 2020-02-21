@@ -5,8 +5,8 @@
  *
  * @returns {Promise}
  */
-import ReadableStream = NodeJS.ReadableStream;
 import * as Promise from "bluebird";
+import ReadableStream = NodeJS.ReadableStream;
 
 export const streamPromise = (stream: ReadableStream) =>
   new Promise((resolve, reject) => {

@@ -1,7 +1,6 @@
-import "isomorphic-fetch";
-import "isomorphic-form-data";
-import ReadableStream = NodeJS.ReadableStream;
+/// <reference types="node" />
 import * as Promise from "bluebird";
+import ReadableStream = NodeJS.ReadableStream;
 export interface IDeferred {
     resolve: (result: any) => void;
     reject: (error: Error) => void;
@@ -30,6 +29,11 @@ export interface ICommunibaseVersionInformation {
 export interface ICommunibaseParams {
     fields?: string;
     limit?: number;
+    page?: number;
+    sort?: string;
+    includeMetadata?: boolean;
+    dir?: "ASC" | "DESC";
+    deleted?: boolean;
 }
 /**
  * Constructor for connector.

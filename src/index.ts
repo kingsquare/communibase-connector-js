@@ -1,11 +1,8 @@
-import "isomorphic-fetch";
-import "isomorphic-form-data";
-
-import ReadableStream = NodeJS.ReadableStream;
+import axios, { AxiosRequestConfig } from "axios";
 import async, { AsyncQueue } from "async";
 import * as Promise from "bluebird";
 import http, { request as httpRequest, STATUS_CODES } from "http";
-import https, { request as httpsRequest } from "https";
+import { request as httpsRequest } from "https";
 import lruCache, { Cache } from "lru-cache";
 import moment from "moment";
 import socketIoClient from "socket.io-client";
@@ -14,9 +11,11 @@ import winston from "winston";
 
 import { getResourceBufferPromise } from "./util";
 
+import ReadableStream = NodeJS.ReadableStream;
+
 export interface IDeferred {
-  resolve: (result:any) => void;
-  reject: (error:Error) => void;
+  resolve: (result: any) => void;
+  reject: (error: Error) => void;
   promise: Promise<any> & { metadata?: any };
 }
 
@@ -51,16 +50,13 @@ export interface ICommunibaseVersionInformation {
 }
 
 interface ICommunibaseTask {
-  options: {
+  options: AxiosRequestConfig & {
     headers?: {
       Host?: string;
       "x-api-key"?: string;
       "x-access-token"?: string;
       Accept?: string;
       "Content-Type"?: string;
-    };
-    query?: {
-      [key: string]: string;
     };
   };
   url: string;
@@ -70,6 +66,11 @@ interface ICommunibaseTask {
 export interface ICommunibaseParams {
   fields?: string;
   limit?: number;
+  page?: number;
+  sort?: string;
+  includeMetadata?: boolean;
+  dir?: "ASC" | "DESC";
+  deleted?: boolean;
 }
 
 function defer(): IDeferred {
@@ -123,7 +124,7 @@ export class Connector {
   private token: string;
   private serviceUrl: string;
   private serviceUrlIsHttps: boolean;
-  private queue: AsyncQueue<any>;
+  private queue: AsyncQueue<ICommunibaseTask>;
   private cache?: {
     objectCache: {
       [objectType: string]: {
@@ -187,40 +188,27 @@ export class Connector {
       if (this.token) {
         task.options.headers["x-access-token"] = this.token;
       }
-      // not support by fetch spec / whatwg-fetch
-      if (task.options.query) {
-        task.url += `?${Object.keys(task.options.query)
-          .map(
-            queryVar =>
-              `${encodeURIComponent(queryVar)}=${encodeURIComponent(
-                task.options.query[queryVar]
-              )}`
-          )
-          .join("&")}`;
-        task.options.query = undefined;
-      }
 
-      let success = false;
-      Promise.resolve(fetch(task.url, task.options))
-        .then(response => {
-          success = response.status === 200;
-          return response.json();
+      axios
+        .request({
+          url: task.url,
+          ...task.options
         })
         .then(result => {
-          if (success) {
-            const deferred = task.deferred;
-            let records = result;
-            if (result.metadata && result.records) {
-              deferred.promise.metadata = result.metadata;
-              records = result.records;
-            }
-            deferred.resolve(records);
-            callback();
-            return null;
+          const { deferred } = task;
+          let records = result.data;
+          if (records.metadata && records.records) {
+            deferred.promise.metadata = records.metadata;
+            // eslint-disable-next-line prefer-destructuring
+            records = records.records;
           }
-          throw result;
+          deferred.resolve(records);
+          callback();
+          return null;
         })
-        .catch(fail);
+        .catch(err => {
+          fail(err.response.data || err);
+        });
     }, 8);
   }
 
@@ -261,7 +249,7 @@ export class Connector {
         }`,
         options: {
           method: "GET",
-          query: params
+          params
         }
       });
       return deferred.promise;
@@ -325,7 +313,7 @@ export class Connector {
       return this.privateGetByIds<T>(objectType, objectIds, params);
     }
 
-    return Promise.map(objectIds, objectId =>
+    return Promise.map(objectIds, (objectId: string) =>
       this.getById<T>(objectType, objectId, params).reflect()
     ).then(inspections => {
       const result: T[] = [];
@@ -371,7 +359,7 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/crud`,
       options: {
         method: "GET",
-        query: params
+        params
       }
     });
     return deferred.promise;
@@ -404,11 +392,10 @@ export class Connector {
       }
     }
 
-    const resultPromise = this.search(
-      objectType,
-      selector,
-      { fields: "_id", ...params}
-    ).then(results => results.map(obj => obj._id));
+    const resultPromise = this.search(objectType, selector, {
+      fields: "_id",
+      ...params
+    }).then(results => results.map(obj => obj._id));
 
     if (this.cache) {
       return resultPromise.then(ids => {
@@ -496,7 +483,7 @@ export class Connector {
       }`,
       options: {
         method: operation,
-        body: JSON.stringify(object)
+        data: object
       }
     });
 
@@ -646,7 +633,7 @@ export class Connector {
         url: `${this.serviceUrl}File.json/binary`,
         options: {
           method: "POST",
-          body: formData,
+          data: formData,
           headers: {
             Accept: "application/json"
           }
@@ -710,7 +697,7 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/history/search`,
       options: {
         method: "POST",
-        body: JSON.stringify(selector)
+        data: selector
       }
     });
     return deferred.promise;
@@ -839,7 +826,7 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/aggregate`,
       options: {
         method: "POST",
-        body: JSON.stringify(aggregationPipeline)
+        data: aggregationPipeline
       }
     });
 
@@ -921,8 +908,8 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/search`,
       options: {
         method: "POST",
-        body: JSON.stringify(selector),
-        query: params
+        data: selector,
+        params
       }
     });
     return deferred.promise;
@@ -932,7 +919,9 @@ export class Connector {
    * Bare boned retrieval by objectIds
    * @returns {Promise}
    */
-  private privateGetByIds<T extends ICommunibaseDocument = ICommunibaseDocument>(
+  private privateGetByIds<
+    T extends ICommunibaseDocument = ICommunibaseDocument
+  >(
     objectType: CommunibaseEntityType,
     objectIds: string[],
     params?: {}
@@ -960,7 +949,10 @@ export class Connector {
           const objectHash: {
             [key: string]: ICommunibaseDocument;
           } = objects.reduce(
-            (previousValue: { [key: string]: ICommunibaseDocument }, object) => {
+            (
+              previousValue: { [key: string]: ICommunibaseDocument },
+              object
+            ) => {
               previousValue[object._id] = object;
               return previousValue;
             },

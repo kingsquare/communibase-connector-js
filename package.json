@@ -34,7 +34,7 @@
   "browser": {},
   "main": "lib/index.js",
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "eslintConfig": {
     "extends": "kingsquare"

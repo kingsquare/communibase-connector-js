@@ -16,7 +16,8 @@
     "lru-cache": "^4.1.2",
     "moment": "^2.22.1",
     "socket.io-client": "^2.1.0",
-    "winston": "^2.4.2"
+    "winston": "^2.4.2",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
@@ -41,7 +42,10 @@
   },
   "scripts": {
     "prepublishOnly": "./node_modules/.bin/tsc",
-    "test": "./node_modules/.bin/tsc; mocha --delay --exit"
+    "test": "./node_modules/.bin/tsc; mocha --delay --exit",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
-  "types": "./lib/index.d.ts"
+  "types": "./lib/index.d.ts",
+  "snyk": true
 }

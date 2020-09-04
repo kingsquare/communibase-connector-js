@@ -22,7 +22,7 @@
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
     "bson-stream": "0.0.8",
     "mocha": "5.0.0",
-    "mongodb": "^2.2.34",
+    "mongodb": "^3.6.1",
     "prettier": "^1.19.1",
     "typescript": "^3.8.2"
   },

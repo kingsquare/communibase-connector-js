@@ -7,12 +7,12 @@ const assert = require("assert");
 const fs = require("fs");
 const Promise = require("bluebird");
 
-describe("Connector", function() {
+describe("Connector", function () {
   this.timeout(30000);
   describe("key handling", () => {
-    it("should throw errors when no proper key is configured", done => {
+    it("should throw errors when no proper key is configured", (done) => {
       cbc.getAll("EntityType").then(
-        res => {
+        (res) => {
           console.log(res);
           done(new Error("Got response with improper key"));
         },
@@ -22,13 +22,13 @@ describe("Connector", function() {
       );
     });
 
-    it("should be able to construct a clone with a different key", done => {
+    it("should be able to construct a clone with a different key", (done) => {
       cbc = cbc.clone(process.env.COMMUNIBASE_KEY);
       cbc.getAll("EntityType").then(
         () => {
           done();
         },
-        err => {
+        (err) => {
           done(err);
         }
       );
@@ -36,7 +36,7 @@ describe("Connector", function() {
   });
 
   describe("promise handling", () => {
-    it("should reject the promise with a CommunibaseError when validation fails", done => {
+    it("should reject the promise with a CommunibaseError when validation fails", (done) => {
       cbc
         .update("Person", {
           firstName: "Henk",
@@ -48,16 +48,16 @@ describe("Connector", function() {
               streetNumber: "123",
               zipcode: "1234ab",
               city: "abc-city",
-              countryCode: "NL"
-            }
-          ]
+              countryCode: "NL",
+            },
+          ],
         })
         .then(
           () => {
             // result
             done(new Error("Should not store invalid document"));
           },
-          err => {
+          (err) => {
             assert.equal(err instanceof Error, true);
             assert.equal(Object.keys(err.errors).length > 0, true);
             done();
@@ -67,13 +67,13 @@ describe("Connector", function() {
   });
 
   describe("getAll", () => {
-    it("should get all EntityTypes", done => {
+    it("should get all EntityTypes", (done) => {
       cbc.getAll("EntityType").then(
-        entityTypes => {
+        (entityTypes) => {
           assert.equal(entityTypes && entityTypes.length > 0, true);
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
@@ -81,14 +81,14 @@ describe("Connector", function() {
   });
 
   describe("getIds", () => {
-    it("should get an array of ids", done => {
+    it("should get an array of ids", (done) => {
       cbc.getIds("EntityType", { _id: { $exists: true } }).then(
-        entityTypeIds => {
+        (entityTypeIds) => {
           ids = entityTypeIds;
           assert.equal(entityTypeIds.length > 0, true);
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
@@ -96,25 +96,25 @@ describe("Connector", function() {
   });
 
   describe("getId", () => {
-    it("should get an id", done => {
+    it("should get an id", (done) => {
       cbc.getId("EntityType").then(
-        entityTypeId => {
+        (entityTypeId) => {
           assert.equal(entityTypeId.length > 0, true);
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
     });
 
-    it("should return undefined when no id is available", done => {
+    it("should return undefined when no id is available", (done) => {
       cbc.getId("EntityType", { _id: { $exists: false } }).then(
-        entityTypeId => {
+        (entityTypeId) => {
           assert.equal(entityTypeId, undefined);
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
@@ -122,13 +122,13 @@ describe("Connector", function() {
   });
 
   describe("getById", () => {
-    it("should get an object by its id", done => {
+    it("should get an object by its id", (done) => {
       cbc.getById("EntityType", ids.pop()).then(
-        entityType => {
+        (entityType) => {
           assert.equal(entityType._id !== undefined, true);
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
@@ -136,13 +136,13 @@ describe("Connector", function() {
   });
 
   describe("getByIds", () => {
-    it("should get data by ids", done => {
+    it("should get data by ids", (done) => {
       cbc.getByIds("EntityType", ids).then(
-        entityTypes => {
+        (entityTypes) => {
           assert.equal(entityTypes.length > 0, true);
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
@@ -150,7 +150,7 @@ describe("Connector", function() {
   });
 
   describe("update", () => {
-    it("should not create an invalid document e.g. a person without lastname", done => {
+    it("should not create an invalid document e.g. a person without lastname", (done) => {
       cbc.update("Person", { firstName: "Henk" }).then(
         () => {
           done(new Error("Could create an invalid document"));
@@ -162,38 +162,36 @@ describe("Connector", function() {
       );
     });
 
-    it("should create a valid person", done => {
+    it("should create a valid person", (done) => {
       cbc
         .update("Person", {
           initials: "H.",
           firstName: "Henk",
           lastName: "De Vries",
-          registeredDate: moment()
-            .startOf("day")
-            .toDate()
+          registeredDate: moment().startOf("day").toDate(),
         })
         .then(
-          result => {
+          (result) => {
             assert.equal(result._id === undefined, false);
             newHenk = result;
             done();
           },
-          error => {
+          (error) => {
             console.log(error);
             done(error);
           }
         );
     });
 
-    it("should update a valid person when it has an _id", done => {
+    it("should update a valid person when it has an _id", (done) => {
       newHenk.middlename = "Penk";
       cbc.update("Person", newHenk).then(
-        result => {
+        (result) => {
           assert.equal(newHenk._id, result._id);
           newHenk = result;
           done();
         },
-        error => {
+        (error) => {
           console.log(error);
           done(error);
         }
@@ -226,12 +224,12 @@ describe("Connector", function() {
   // });
 
   describe("destroy", () => {
-    it("should delete something e.g. a person", done => {
+    it("should delete something e.g. a person", (done) => {
       cbc.destroy("Person", newHenk._id).then(
         () => {
           done();
         },
-        error => {
+        (error) => {
           done(error);
         }
       );
@@ -239,10 +237,10 @@ describe("Connector", function() {
   });
 
   describe("queue handling", () => {
-    it("should handle/queue a lot of search requests properly", done => {
+    it("should handle/queue a lot of search requests properly", (done) => {
       let promise,
         resultPromises = [],
-        assertEqual = function(result) {
+        assertEqual = function (result) {
           assert.equal(result.length, 1);
         };
       for (let i = 0; i < 500; i += 1) {
@@ -250,13 +248,13 @@ describe("Connector", function() {
         resultPromises.push(promise);
       }
 
-      Promise.all(resultPromises).then(result => {
+      Promise.all(resultPromises).then((result) => {
         assert.equal(result.length, 500);
         done();
       });
     });
 
-    it("should handle/queue a lot of update requests properly", done => {
+    it("should handle/queue a lot of update requests properly", (done) => {
       const personData = JSON.parse(
         fs.readFileSync(`${__dirname}/../fixtures/person.json`)
       );
@@ -265,7 +263,7 @@ describe("Connector", function() {
         resultPromises.push(cbc.update("Person", personData));
       }
 
-      Promise.all(resultPromises).then(result => {
+      Promise.all(resultPromises).then((result) => {
         assert.equal(result.length, 500);
         done();
       });
@@ -299,21 +297,21 @@ describe("Connector", function() {
   // });
 
   describe("aggregation", () => {
-    it("works", done => {
+    it("works", (done) => {
       cbc
         .aggregate("Event", [
           { $match: { _id: { $ObjectId: "52f8fb85fae15e6d0806e7c7" } } },
           { $unwind: "$participants" },
-          { $group: { _id: "$_id", participantCount: { $sum: 1 } } }
+          { $group: { _id: "$_id", participantCount: { $sum: 1 } } },
         ])
         .then(
-          participantCounts => {
+          (participantCounts) => {
             if (participantCounts && participantCounts.length) {
               assert.equal(participantCounts[0].participantCount > 0, true);
             }
             done();
           },
-          err => {
+          (err) => {
             done(err);
           }
         );
@@ -337,7 +335,7 @@ describe("Connector", function() {
     //    });
     //  });
 
-    it("throws an error with an incorrect ref", done => {
+    it("throws an error with an incorrect ref", (done) => {
       cbc
         .getByRef({
           rootDocumentId: "524aca8947bd91000600000c",
@@ -345,12 +343,12 @@ describe("Connector", function() {
           path: [
             {
               field: "addresses",
-              objectId: "53440792463cda7161000001"
-            }
-          ]
+              objectId: "53440792463cda7161000001",
+            },
+          ],
         })
         .then(
-          address => {
+          (address) => {
             console.log(address);
             done(new Error("Should not find something"));
           },
@@ -362,18 +360,18 @@ describe("Connector", function() {
   });
 
   describe("search", () => {
-    it("should only provide selected fields if requested", done => {
+    it("should only provide selected fields if requested", (done) => {
       cbc
         .search(
           {
-            firstName: "Henk"
+            firstName: "Henk",
           },
           {
-            fields: "lastName"
+            fields: "lastName",
           }
         )
         .then(
-          henkies => {
+          (henkies) => {
             console.log(henkies);
             assert.equal(typeof henkies[0]._id, "string");
             assert.equal(typeof henkies[0].lastName, "string");

@@ -1,13 +1,11 @@
-/* global Promise:true */
 const path = require("path");
 const Promise = require("bluebird");
 const mongodb = require("mongodb");
 
-const MongoClient = Promise.promisifyAll(mongodb.MongoClient);
+const { MongoClient } = require("mongodb");
 const BSONStream = require("bson-stream");
 
-const Db = mongodb.Db;
-const Server = mongodb.Server;
+const { Db, Server } = mongodb;
 const url = require("url");
 const fs = require("fs");
 const winston = require("winston");
@@ -22,7 +20,7 @@ function getDropDbPromise(uri) {
   db = Promise.promisifyAll(db);
   return db
     .openAsync()
-    .then(_db => _db.dropDatabase())
+    .then((_db) => _db.dropDatabase())
     .then(() => {
       db.close();
     });
@@ -42,8 +40,8 @@ function addSpectialAttributes(entityType) {
     items: "string",
     allowableValues: {
       valueType: "List",
-      values: ["a", "b", "c", "d", "e"]
-    }
+      values: ["a", "b", "c", "d", "e"],
+    },
   });
 
   return entityType;
@@ -55,13 +53,14 @@ function importBsonEntityTypes(bsonFileLocation, dbUri) {
     fs.createReadStream(bsonFileLocation).pipe(bson);
     const toBeSavedEntityTypes = [];
 
-    bson.on("data", entityType =>
+    bson.on("data", (entityType) =>
       toBeSavedEntityTypes.push(addSpectialAttributes(entityType))
     );
 
     bson.on("end", () => {
-      MongoClient.connectAsync(dbUri)
-        .then(administrationConnection =>
+      const client = new MongoClient(dbUri);
+      MongoClient.connect(dbUri)
+        .then((administrationConnection) =>
           Promise.promisifyAll(
             administrationConnection.collection("EntityType")
           )
@@ -75,19 +74,19 @@ function importBsonEntityTypes(bsonFileLocation, dbUri) {
   });
 }
 
-module.exports = function() {
+module.exports = function () {
   const adminMongooseConnection = require(`${__dirname}/../../node_modules/Communibase/inc/mongeese/createAdminMongoose.js`)(
     process.env.MASTER_DB_URI
   );
 
-  const adminMongooseConnectionReadyDeferred = new Promise(resolve => {
+  const adminMongooseConnectionReadyDeferred = new Promise((resolve) => {
     adminMongooseConnection.once("open", resolve);
   });
 
   return Promise.all([
     adminMongooseConnectionReadyDeferred,
     getDropDbPromise(process.env.MASTER_DB_URI),
-    getDropDbPromise(process.env.TEST_ADMINISTRATION_DB_URI)
+    getDropDbPromise(process.env.TEST_ADMINISTRATION_DB_URI),
   ])
     .then(() => {
       winston.debug("Saving new master key");
@@ -100,7 +99,7 @@ module.exports = function() {
         description: "The API unittest master test key",
         email: "unittest@kingsquare.nl",
         apiEndpoints: [],
-        propertyAccessDescriptions: []
+        propertyAccessDescriptions: [],
       });
     })
     .then(() => {
@@ -109,13 +108,13 @@ module.exports = function() {
       return adminMongooseConnection.models.Administration.create({
         title: "Unittest administration",
         dbUri: process.env.TEST_ADMINISTRATION_DB_URI,
-        type: "Kingsquare"
-      }).then(administration => {
+        type: "Kingsquare",
+      }).then((administration) => {
         process.env.TEST_ADMINISTRATION_ID = administration._id;
         return Promise.resolve(administration._id);
       });
     })
-    .then(administrationId => {
+    .then((administrationId) => {
       winston.debug("Saving new administration key!");
       return adminMongooseConnection.models.ApiKey.create({
         administrationId,
@@ -123,7 +122,7 @@ module.exports = function() {
         description: "The API unittest administration test key",
         email: "unittest@kingsquare.nl",
         apiEndpoints: [],
-        propertyAccessDescriptions: []
+        propertyAccessDescriptions: [],
       });
     })
     .then(() => adminMongooseConnection.close())

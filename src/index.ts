@@ -85,7 +85,7 @@ function defer(): IDeferred {
     resolve,
     // @ts-ignore
     reject,
-    promise
+    promise,
   };
 }
 
@@ -177,7 +177,7 @@ export class Connector {
       if (!task.options.headers) {
         task.options.headers = {
           Accept: "application/json",
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         };
       }
       if (process.env.COMMUNIBASE_API_HOST) {
@@ -194,9 +194,9 @@ export class Connector {
       axios
         .request({
           url: task.url,
-          ...task.options
+          ...task.options,
         })
-        .then(result => {
+        .then((result) => {
           const { deferred } = task;
           let records = result.data;
           if (records.metadata && records.records) {
@@ -251,8 +251,8 @@ export class Connector {
         }`,
         options: {
           method: "GET",
-          params
-        }
+          params,
+        },
       });
       return deferred.promise;
     }
@@ -317,10 +317,10 @@ export class Connector {
 
     return Promise.map(objectIds, (objectId: string) =>
       this.getById<T>(objectType, objectId, params).reflect()
-    ).then(inspections => {
+    ).then((inspections) => {
       const result: T[] = [];
       let error = null;
-      inspections.forEach(inspection => {
+      inspections.forEach((inspection) => {
         if (inspection.isRejected()) {
           error = inspection.reason();
           return;
@@ -361,8 +361,8 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/crud`,
       options: {
         method: "GET",
-        params
-      }
+        params,
+      },
     });
     return deferred.promise;
   }
@@ -397,11 +397,11 @@ export class Connector {
 
     const resultPromise = this.search(objectType, selector || {}, {
       fields: "_id",
-      ...params
-    }).then(results => results.map(obj => obj._id as string));
+      ...params,
+    }).then((results) => results.map((obj) => obj._id as string));
 
     if (this.cache) {
-      return resultPromise.then(ids => {
+      return resultPromise.then((ids) => {
         if (this.cache) {
           const objectTypeGetIdCache = this.cache.getIdsCaches[objectType];
           if (objectTypeGetIdCache) {
@@ -427,7 +427,7 @@ export class Connector {
     selector?: {}
   ): Promise<string | null> {
     return this.getIds(objectType, selector, { limit: 1 }).then(
-      ids => ids.pop() || null
+      (ids) => ids.pop() || null
     );
   }
 
@@ -444,7 +444,7 @@ export class Connector {
     params?: ICommunibaseParams
   ): Promise<T[]> {
     if (this.cache && !(params && params.fields)) {
-      return this.getIds(objectType, selector, params).then(ids =>
+      return this.getIds(objectType, selector, params).then((ids) =>
         this.getByIds<T>(objectType, ids)
       );
     }
@@ -491,8 +491,8 @@ export class Connector {
       }`,
       options: {
         method: operation,
-        data: object
-      }
+        data: object,
+      },
     });
 
     return deferred.promise;
@@ -524,8 +524,8 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl + objectType}.json/crud/${objectId}`,
       options: {
-        method: "DELETE"
-      }
+        method: "DELETE",
+      },
     });
 
     return deferred.promise;
@@ -548,8 +548,8 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl + objectType}.json/history/undelete/${objectId}`,
       options: {
-        method: "POST"
-      }
+        method: "POST",
+      },
     });
 
     return deferred.promise;
@@ -607,7 +607,7 @@ export class Connector {
     id?: string
   ): Promise<ICommunibaseDocument> {
     const metaData = {
-      path: destinationPath
+      path: destinationPath,
     };
 
     return getResourceBufferPromise(resource).then((buffer: any) => {
@@ -620,7 +620,7 @@ export class Connector {
           length: buffer.length,
           uploadDate: moment().format(),
           metadata: metaData,
-          content: buffer
+          content: buffer,
         });
       }
 
@@ -646,9 +646,9 @@ export class Connector {
           method: "POST",
           data: formData,
           headers: {
-            Accept: "application/json"
-          }
-        }
+            Accept: "application/json",
+          },
+        },
       });
       return deferred.promise;
     });
@@ -686,8 +686,8 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl + objectType}.json/history/${objectId}`,
       options: {
-        method: "GET"
-      }
+        method: "GET",
+      },
     });
     return deferred.promise;
   }
@@ -708,8 +708,8 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/history/search`,
       options: {
         method: "POST",
-        data: selector
-      }
+        data: selector,
+      },
     });
     return deferred.promise;
   }
@@ -766,7 +766,7 @@ export class Connector {
 
     /* tslint:disable no-parameter-reassignment */
     return parentDocumentPromise.then((result: ICommunibaseDocument | null) => {
-      ref.path.some(pathNibble => {
+      ref.path.some((pathNibble) => {
         if (result && result[pathNibble.field]) {
           if (
             !result[pathNibble.field].some(
@@ -839,14 +839,14 @@ export class Connector {
       url: `${this.serviceUrl + objectType}.json/aggregate`,
       options: {
         method: "POST",
-        data: aggregationPipeline
-      }
+        data: aggregationPipeline,
+      },
     });
 
     const resultPromise = deferred.promise;
 
     if (this.cache) {
-      return resultPromise.then(result => {
+      return resultPromise.then((result) => {
         if (this.cache) {
           const objectTypeAggregateCache = this.cache.aggregateCaches[
             objectType
@@ -874,8 +874,8 @@ export class Connector {
       deferred,
       url: `${this.serviceUrl}Invoice.json/finalize/${invoiceId}`,
       options: {
-        method: "POST"
-      }
+        method: "POST",
+      },
     });
     return deferred.promise;
   }
@@ -901,7 +901,7 @@ export class Connector {
           cache.objectCache[objectType] &&
           cache.objectCache[objectType][objectId]
         );
-      }
+      },
     };
     const { cache } = this;
     cache.dirtySock.on("connect", () => {
@@ -933,8 +933,8 @@ export class Connector {
       options: {
         method: "POST",
         data: selector,
-        params
-      }
+        params,
+      },
     });
     return deferred.promise;
   }
@@ -953,7 +953,7 @@ export class Connector {
     return this.queueSearch(
       objectType,
       {
-        _id: { $in: objectIds }
+        _id: { $in: objectIds },
       },
       params
     );
@@ -963,13 +963,13 @@ export class Connector {
    * Default object retrieval: should provide cachable objects
    */
   private spoolQueue(): void {
-    Object.keys(this.getByIdQueue).forEach(objectType => {
+    Object.keys(this.getByIdQueue).forEach((objectType) => {
       const deferredsById = this.getByIdQueue[objectType];
       const objectIds = Object.keys(deferredsById);
 
       this.getByIdQueue[objectType] = {};
       this.privateGetByIds(objectType, objectIds).then(
-        objects => {
+        (objects) => {
           const objectHash: {
             [key: string]: ICommunibaseDocument;
           } = objects.reduce(
@@ -994,8 +994,8 @@ export class Connector {
             );
           });
         },
-        err => {
-          objectIds.forEach(objectId => {
+        (err) => {
+          objectIds.forEach((objectId) => {
             deferredsById[objectId].reject(err);
           });
         }

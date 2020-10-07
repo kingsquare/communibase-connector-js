@@ -11,13 +11,13 @@ import ReadableStream = NodeJS.ReadableStream;
 export const streamPromise = (stream: ReadableStream) =>
   new Promise((resolve, reject) => {
     const buffer: Buffer[] = [];
-    stream.on("data", data => {
+    stream.on("data", (data) => {
       buffer.push(data);
     });
     stream.on("end", () => {
       resolve(Buffer.concat(buffer));
     });
-    stream.on("error", err => {
+    stream.on("error", (err) => {
       reject(err);
     });
   });

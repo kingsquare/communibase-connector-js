@@ -6,7 +6,7 @@ const cbc = require("../../lib/index.js").default.clone(
   process.env.COMMUNIBASE_KEY
 );
 
-module.exports = function() {
+module.exports = function () {
   console.log("Loading fixtures?");
   const personData = JSON.parse(
     fs.readFileSync(`${__dirname}/../fixtures/person.json`)
@@ -40,7 +40,7 @@ module.exports = function() {
     cbc.update("Person", personData),
     cbc.update("Company", companyData),
     cbc.update("Group", groupData),
-    cbc.update("Event", eventData)
+    cbc.update("Event", eventData),
   ])
     .spread((person, company, group, event) => {
       debtorData.personId = person._id;
@@ -59,10 +59,10 @@ module.exports = function() {
             {
               field: "addresses",
               objectId: person.addresses[0]._id,
-              _id: "5538e68cbb1bf31f00dfee58"
-            }
-          ]
-        }
+              _id: "5538e68cbb1bf31f00dfee58",
+            },
+          ],
+        },
       };
       process.env.TEST_PERSON_ID = person._id;
       process.env.TEST_COMPANY_ID = company._id;
@@ -70,7 +70,7 @@ module.exports = function() {
       process.env.TEST_EVENT_ID = event._id;
       return Promise.all([
         cbc.update("Debtor", debtorData),
-        cbc.update("Debtor", debtor2Data)
+        cbc.update("Debtor", debtor2Data),
       ]);
     })
     .spread((debtor, debtor2) => {
@@ -84,7 +84,7 @@ module.exports = function() {
       process.env.TEST_DEBTOR_2_ID = debtor2._id;
       return cbc.update("Membership", membershipData);
     })
-    .then(membership => {
+    .then((membership) => {
       invoiceData.invoiceItems[0].documentReference = {
         _id: null,
         rootDocumentId: membership._id,
@@ -92,15 +92,15 @@ module.exports = function() {
         path: [
           {
             field: "invoicedPeriods",
-            objectId: membership.invoicedPeriods[3]._id
-          }
-        ]
+            objectId: membership.invoicedPeriods[3]._id,
+          },
+        ],
       };
       process.env.TEST_MEMBERSHIP_ID = membership._id;
 
       return Promise.all([
         cbc.update("Invoice", invoiceData),
-        cbc.update("Invoice", invoice2Data)
+        cbc.update("Invoice", invoice2Data),
       ]);
     })
     .spread((invoice, invoice2) => {

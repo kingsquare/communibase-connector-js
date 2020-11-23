@@ -1,7 +1,7 @@
 {
   "name": "communibase-connector-js",
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "dependencies": {
     "@types/async": "^2.0.49",
     "@types/bluebird": "^3.5.20",
@@ -19,8 +19,8 @@
   "devDependencies": {
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
     "bson-stream": "0.0.8",
-    "eslint": "^6.8.0",
-    "eslint-config-kingsquare": "^6.0.4",
+    "eslint": "^7.14.0",
+    "eslint-config-kingsquare": "^7.0.2",
     "mocha": "5.0.0",
     "mongodb": "^3.6.2",
     "prettier": "^2.1.2",

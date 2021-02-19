@@ -1,4 +1,4 @@
-box: node:10
+box: node:12
 services:
     - mongo:2.6
 build:

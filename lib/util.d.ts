@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Returns a stream {Promise} which returns a {Buffer} of the stream contents
  *
@@ -5,9 +6,9 @@
  *
  * @returns {Promise}
  */
-import ReadableStream = NodeJS.ReadableStream;
 import * as Promise from "bluebird";
-export declare const streamPromise: (stream: ReadableStream) => Promise<{}>;
+import ReadableStream = NodeJS.ReadableStream;
+export declare const streamPromise: (stream: ReadableStream) => Promise<unknown>;
 /**
  * Returns a given resource as a Buffer (promise)
  *

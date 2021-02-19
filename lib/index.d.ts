@@ -1,7 +1,6 @@
-import "isomorphic-fetch";
-import "isomorphic-form-data";
-import ReadableStream = NodeJS.ReadableStream;
+/// <reference types="node" />
 import * as Promise from "bluebird";
+import ReadableStream = NodeJS.ReadableStream;
 export interface IDeferred {
     resolve: (result: any) => void;
     reject: (error: Error) => void;
@@ -30,6 +29,11 @@ export interface ICommunibaseVersionInformation {
 export interface ICommunibaseParams {
     fields?: string;
     limit?: number;
+    page?: number;
+    sort?: string;
+    includeMetadata?: boolean;
+    dir?: "ASC" | "DESC";
+    deleted?: boolean;
 }
 /**
  * Constructor for connector.
@@ -40,13 +44,13 @@ export interface ICommunibaseParams {
 export declare class Connector {
     private getByIdQueue;
     private getByIdPrimed;
-    private key;
+    private key?;
     private token;
     private serviceUrl;
     private serviceUrlIsHttps;
     private queue;
     private cache?;
-    constructor(key: string);
+    constructor(key?: string);
     setServiceUrl(newServiceUrl: string): void;
     /**
      * Return the configured service url
@@ -96,7 +100,7 @@ export declare class Connector {
      * @param {object} selector - { firstName: "Henk" }
      * @returns {Promise} - for a string OR undefined if not found
      */
-    getId(objectType: CommunibaseEntityType, selector?: {}): Promise<string>;
+    getId(objectType: CommunibaseEntityType, selector?: {}): Promise<string | null>;
     /**
      *
      * @param objectType

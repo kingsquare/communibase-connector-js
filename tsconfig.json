@@ -7,14 +7,9 @@
     "baseUrl": ".",
     "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": true,
+    "lib": ["es5", "dom"],
     "allowSyntheticDefaultImports": true,
-    "types": [
-      "node"
-    ],
-    "typeRoots": [
-      "node_modules/",
-      "node_modules/@types"
-    ]
+    "typeRoots": [",/node_modules/@types", "./types"],
+    "strict": true
   }
 }

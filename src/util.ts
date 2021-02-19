@@ -5,19 +5,19 @@
  *
  * @returns {Promise}
  */
-import ReadableStream = NodeJS.ReadableStream;
 import * as Promise from "bluebird";
+import ReadableStream = NodeJS.ReadableStream;
 
 export const streamPromise = (stream: ReadableStream) =>
   new Promise((resolve, reject) => {
     const buffer: Buffer[] = [];
-    stream.on("data", data => {
+    stream.on("data", (data) => {
       buffer.push(data);
     });
     stream.on("end", () => {
       resolve(Buffer.concat(buffer));
     });
-    stream.on("error", err => {
+    stream.on("error", (err) => {
       reject(err);
     });
   });
@@ -42,6 +42,7 @@ export function getResourceBufferPromise(
     return Promise.resolve(resource);
   }
   // probably a stream
-  // TODO npe/type check
+  // @TODO npe/type check
+  // @ts-ignore
   return this.streamPromise(resource);
 }

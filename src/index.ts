@@ -7,7 +7,6 @@ import lruCache, { Cache } from "lru-cache";
 import moment from "moment";
 import socketIoClient from "socket.io-client";
 import { PassThrough } from "stream";
-import winston from "winston";
 
 import { getResourceBufferPromise } from "./util";
 
@@ -910,7 +909,7 @@ export class Connector {
     cache.dirtySock.on("message", (dirtyness: string) => {
       const dirtyInfo = dirtyness.split("|");
       if (dirtyInfo.length !== 2) {
-        winston.warn(`${new Date()}: Got weird dirty sock data? ${dirtyness}`);
+        console.log(`${new Date()}: Got weird dirty sock data? ${dirtyness}`);
         return;
       }
       cache.getIdsCaches[dirtyInfo[0]] = null;

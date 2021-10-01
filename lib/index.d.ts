@@ -53,10 +53,6 @@ export declare class Connector {
     constructor(key?: string);
     setServiceUrl(newServiceUrl: string): void;
     /**
-     * Return the configured service url
-     */
-    getServiceUrl(): string;
-    /**
      * Get a single object by its id
      *
      * @param {string} objectType - E.g. Person

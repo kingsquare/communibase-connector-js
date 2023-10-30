@@ -3,27 +3,26 @@
   "description": "communibase-connector-js --- a Node.js connector for the Communibase service",
   "version": "2.0.5",
   "dependencies": {
-    "@types/async": "^2.0.49",
-    "@types/bluebird": "^3.5.20",
-    "@types/lru-cache": "^4.1.0",
-    "@types/node": "^12.20.7",
-    "@types/socket.io-client": "^1.4.32",
-    "async": "^2.5.0",
-    "axios": "^0.22.0",
-    "bluebird": "^3.5.1",
-    "lru-cache": "^4.1.2",
-    "moment": "^2.22.1",
-    "socket.io-client": "^4.2.0"
+    "@types/async": "^3.2.22",
+    "@types/bluebird": "^3.5.41",
+    "@types/node": "^20.8.9",
+    "@types/socket.io-client": "^1.4.36",
+    "async": "^3.2.4",
+    "axios": "^1.6.0",
+    "bluebird": "^3.7.2",
+    "lru-cache": "10.0.1",
+    "moment": "^2.29.4",
+    "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
     "Communibase": "git+ssh://git@bitbucket.org/communibase/api.git",
     "bson-stream": "0.0.8",
-    "eslint": "^7.14.0",
-    "eslint-config-kingsquare": "^7.0.2",
-    "mocha": "5.0.0",
-    "mongodb": "^3.6.2",
-    "prettier": "^2.1.2",
-    "typescript": "^3.8.2"
+    "eslint": "^8.52.0",
+    "eslint-config-kingsquare": "^7.1.0",
+    "mocha": "10.2.0",
+    "mongodb": "^6.2.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
   },
   "license": "MIT",
   "repository": {
